@@ -1,0 +1,10 @@
+{
+  "name": "react-job-portal-root",
+  "version": "1.0.0",
+  "description": "Root package runner for react job portal frontend, backend, and admin panel",
+  "scripts": {
+    "dev": "npm run dev --prefix frontend",
+    "backend": "npm run dev --prefix backend",
+    "admin": "npm run dev --prefix admin"
+  }
+}
