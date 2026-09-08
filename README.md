@@ -76,7 +76,13 @@ To get a local copy up and running follow these simple steps.
    ```sh
    npm run dev
    ```
-7. Open your browser and navigate to `http://localhost:5173` to view the app.
+7. Run the application admin (make sure you are in `/admin` directory) :
+
+   ```sh
+   npm run dev
+   ```
+
+8. Open your browser and navigate to `http://localhost:5173`(frontend), `http://localhost:5174`(admin) to view the app.
 
 ## Contributing
 
