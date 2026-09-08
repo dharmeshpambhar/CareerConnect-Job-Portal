@@ -42,6 +42,9 @@ To get a local copy up and running follow these simple steps.
    cd..
    cd frontend
    npm install
+   cd..
+   cd admin
+   npm install
    ```
 
 3. ## If you don't want to change the`.env` credentials skip step 4 and move to step 5.
