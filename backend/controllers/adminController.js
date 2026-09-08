@@ -3,6 +3,7 @@ import ErrorHandler from "../middlewares/error.js";
 import { Jobseeker } from "../models/jobseekerSchema.js";
 import { Employer } from "../models/employerSchema.js";
 import { AdminUser } from "../models/adminUserSchema.js";
+import { User } from "../models/userSchema.js";
 import { Job } from "../models/jobSchema.js";
 import { Application } from "../models/applicationSchema.js";
 

@@ -503,9 +503,10 @@ export const updateApplicationStatus = catchAsyncErrors(async (req, res, next) =
       let applicantEmail = application.email; // fallback: email stored in application
       let applicantName  = application.name;
 
-      const jsDoc = await Jobseeker.findById(applicantUserId).select("name email").lean();
-      if (jsDoc?.email) {
-        applicantEmail = jsDoc.email;
+      const jsDoc = await Jobseeker.findById(applicantUserId).select("name email workEmail").lean();
+      if (jsDoc) {
+        // Prefer workEmail if set; otherwise use account email
+        applicantEmail = (jsDoc.workEmail && jsDoc.workEmail.trim() !== "") ? jsDoc.workEmail.trim() : (jsDoc.email || applicantEmail);
         applicantName  = jsDoc.name || applicantName;
       } else {
         const userDoc = await User.findById(applicantUserId).select("name email").lean();
@@ -616,9 +617,10 @@ export const updateApplicationStatus = catchAsyncErrors(async (req, res, next) =
       let applicantName  = application.name;
 
       if (applicantUserId) {
-        const jsDoc = await Jobseeker.findById(applicantUserId).select("name email").lean();
-        if (jsDoc?.email) {
-          applicantEmail = jsDoc.email;
+        const jsDoc = await Jobseeker.findById(applicantUserId).select("name email workEmail").lean();
+        if (jsDoc) {
+          // Prefer workEmail if set; otherwise use account email
+          applicantEmail = (jsDoc.workEmail && jsDoc.workEmail.trim() !== "") ? jsDoc.workEmail.trim() : (jsDoc.email || applicantEmail);
           applicantName  = jsDoc.name || applicantName;
         } else {
           const userDoc = await User.findById(applicantUserId).select("name email").lean();

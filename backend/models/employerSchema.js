@@ -14,6 +14,7 @@ const employerSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please enter your Email!"],
       validate: [validator.isEmail, "Please provide a valid Email!"],
+      index: true,
     },
     phone: {
       type: String,

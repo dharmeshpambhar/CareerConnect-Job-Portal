@@ -14,6 +14,7 @@ const jobseekerSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please enter your Email!"],
       validate: [validator.isEmail, "Please provide a valid Email!"],
+      index: true,
     },
     phone: {
       type: String,
@@ -64,6 +65,14 @@ const jobseekerSchema = new mongoose.Schema(
         details: String,
       },
     ],
+    workEmail: {
+      type: String,
+      default: "",
+      validate: {
+        validator: (v) => v === "" || validator.isEmail(v),
+        message: "Please provide a valid work email!",
+      },
+    },
     profileSummary: { type: String, default: "" },
     personalDetails: {
       dob: { type: String, default: "" },

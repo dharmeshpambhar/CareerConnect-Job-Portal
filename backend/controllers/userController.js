@@ -219,9 +219,9 @@ export const getNotifications = catchAsyncErrors(async (req, res, next) => {
       { recipient: userIdStr },
       { recipient: userObjId },
     ],
-  }).sort({ createdAt: -1 });
+  }).sort({ createdAt: -1 }).lean();
 
-  let notifList = rawNotifs.map((n) => (n.toObject ? n.toObject() : n));
+  let notifList = [...rawNotifs];
 
   // Build a lookup map: applicationId -> DB notification (for synthesized ones)
   const dbNotifByAppId = {};
@@ -240,23 +240,23 @@ export const getNotifications = catchAsyncErrors(async (req, res, next) => {
       // Find all jobs posted by this employer
       const employerJobs = await Job.find({
         $or: [{ postedBy: userId }, { postedBy: userIdStr }],
-      });
+      }).select("_id title").lean();
       const jobIdList = employerJobs.map((j) => j._id);
       const jobTitleMap = {};
       employerJobs.forEach((j) => { jobTitleMap[j._id.toString()] = j.title; });
 
       // Get all applications for those jobs
-      const appsForJobs = jobIdList.length > 0
-        ? await Application.find({ jobId: { $in: jobIdList } }).sort({ createdAt: -1 })
-        : [];
-
-      // Also get applications directly referencing employerID.user
-      const appsDirect = await Application.find({
-        $or: [
-          { "employerID.user": userId },
-          { "employerID.user": userIdStr },
-        ],
-      }).sort({ createdAt: -1 });
+      const [appsForJobs, appsDirect] = await Promise.all([
+        jobIdList.length > 0
+          ? Application.find({ jobId: { $in: jobIdList } }).select("_id jobId name email createdAt").lean()
+          : Promise.resolve([]),
+        Application.find({
+          $or: [
+            { "employerID.user": userId },
+            { "employerID.user": userIdStr },
+          ],
+        }).select("_id jobId name email createdAt").lean(),
+      ]);
 
       // Merge and deduplicate by application _id
       const appMap = new Map();
@@ -268,14 +268,11 @@ export const getNotifications = catchAsyncErrors(async (req, res, next) => {
         const appIdStr = app._id.toString();
         const appNotifKey = `employer-app-${appIdStr}`;
 
-        // Check if we already have a DB notification for this application
         if (dbNotifByAppId[appNotifKey]) {
-          // DB record exists — already in notifList with correct read status, skip synthesis
           presentIds.add(dbNotifByAppId[appNotifKey]._id.toString());
           continue;
         }
 
-        // Skip if already tracked by this app's synthetic key
         if (presentIds.has(appNotifKey)) continue;
 
         const jobTitle = app.jobId
@@ -296,7 +293,6 @@ export const getNotifications = catchAsyncErrors(async (req, res, next) => {
         });
       }
 
-      // Sort by createdAt descending
       notifList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     } catch (appErr) {
       console.error("Error synthesizing employer notifications:", appErr);
@@ -311,36 +307,26 @@ export const getNotifications = catchAsyncErrors(async (req, res, next) => {
           { "applicantID.user": userId },
           { "applicantID.user": userIdStr },
         ],
-      }).sort({ updatedAt: -1 });
+      }).sort({ updatedAt: -1 }).select("_id status jobId createdAt updatedAt").lean();
 
-      const seekerAppMap = new Map();
-      seekerApps.forEach((app) => {
-        if (app && app._id) seekerAppMap.set(app._id.toString(), app);
-      });
+      // Collect unique job IDs for batch fetching titles in ONE query instead of N+1 loop
+      const uniqueJobIds = [...new Set(seekerApps.map((a) => a.jobId).filter(Boolean))];
+      const jobTitles = await Job.find({ _id: { $in: uniqueJobIds } }).select("_id title").lean();
+      const jobTitleMap = new Map(jobTitles.map((j) => [j._id.toString(), j.title]));
 
-      for (const app of seekerAppMap.values()) {
+      for (const app of seekerApps) {
         if (app.status && app.status !== "Pending") {
           const appIdStr = app._id.toString();
           const appNotifKey = `seeker-status-${appIdStr}`;
 
-          // Check if we already have a DB notification for this application
           if (dbNotifByAppId[appNotifKey]) {
-            // DB record exists — already in notifList with correct read status, skip synthesis
             presentIds.add(dbNotifByAppId[appNotifKey]._id.toString());
             continue;
           }
 
           if (presentIds.has(appNotifKey)) continue;
 
-          // Find job title if available
-          let jobTitle = "a job";
-          try {
-            if (app.jobId) {
-              const job = await Job.findById(app.jobId).select("title");
-              if (job) jobTitle = job.title;
-            }
-          } catch (e) { }
-
+          const jobTitle = (app.jobId && jobTitleMap.get(app.jobId.toString())) || "a job";
           const exactMessage = `Your application for "${jobTitle}" has been marked as "${app.status}" by the employer.`;
 
           presentIds.add(appNotifKey);
@@ -755,7 +741,7 @@ export const updateJobseekerFullProfile = catchAsyncErrors(async (req, res, next
   const profile = await Jobseeker.findByIdAndUpdate(
     req.user._id,
     { $set: profileData },
-    { new: true, upsert: true }
+    { new: true, upsert: true, runValidators: true }
   );
   res.status(200).json({
     success: true,
@@ -815,7 +801,7 @@ export const updateEmployerFullProfile = catchAsyncErrors(async (req, res, next)
   const profile = await Employer.findByIdAndUpdate(
     req.user._id,
     { $set: profileData },
-    { new: true, upsert: true }
+    { new: true, upsert: true, runValidators: true }
   );
   res.status(200).json({
     success: true,

@@ -74,8 +74,9 @@ const Applications = () => {
       </div>
 
       {loading ? (
-        <div style={{ display: "flex", justifyContent: "center", padding: "3rem", color: "#fff" }}>
-          <div>Loading job applications...</div>
+        <div className="admin-loader">
+          <div className="admin-spinner" />
+          <span>Loading applications...</span>
         </div>
       ) : (
         <div className="glass-panel" style={{ overflow: "hidden" }}>
@@ -93,8 +94,11 @@ const Applications = () => {
               <tbody>
                 {filteredApps.length === 0 ? (
                   <tr>
-                    <td colSpan="5" style={{ textAlignment: "center", color: "var(--text-muted)" }}>
-                      No applications match your search.
+                    <td colSpan="5">
+                      <div className="empty-state">
+                        <span className="empty-state-icon">📄</span>
+                        <span className="empty-state-text">No applications match your search.</span>
+                      </div>
                     </td>
                   </tr>
                 ) : (

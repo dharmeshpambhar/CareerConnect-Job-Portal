@@ -8,9 +8,29 @@ export const Context = createContext({
 });
 
 const AppWrapper = () => {
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [user, setUser] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
+  const initialUser = (() => {
+    try {
+      const stored = localStorage.getItem("job_portal_user");
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  })();
+  const hasUser = Boolean(initialUser && initialUser._id);
+  const [isAuthorized, setIsAuthorized] = useState(hasUser);
+  const [user, setUserState] = useState(initialUser);
+  const [isLoading, setIsLoading] = useState(!hasUser);
+
+  const setUser = (newUser) => {
+    setUserState(newUser);
+    try {
+      if (newUser && newUser._id) {
+        localStorage.setItem("job_portal_user", JSON.stringify(newUser));
+      } else {
+        localStorage.removeItem("job_portal_user");
+      }
+    } catch (e) {}
+  };
 
   return (
     <Context.Provider

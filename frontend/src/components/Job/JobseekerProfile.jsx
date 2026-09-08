@@ -33,6 +33,7 @@ const JobseekerProfile = () => {
   // Dynamic user specific states
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [workEmail, setWorkEmail] = useState("");
   const [location, setLocation] = useState("");
   const [disabilityStatus, setDisabilityStatus] = useState("I don't have a disability");
   const [disabilitySubmitted, setDisabilitySubmitted] = useState(false);
@@ -111,6 +112,7 @@ const JobseekerProfile = () => {
         .then(({ profile: dbProfile }) => {
           if (dbProfile) {
             if (dbProfile.location) setLocation(dbProfile.location);
+            if (dbProfile.workEmail) setWorkEmail(dbProfile.workEmail);
             if (dbProfile.keySkills?.length) setKeySkills(dbProfile.keySkills);
             if (dbProfile.educationList?.length) setEducationList(dbProfile.educationList);
             if (dbProfile.itSkillsList?.length) setItSkillsList(dbProfile.itSkillsList);
@@ -175,6 +177,7 @@ const JobseekerProfile = () => {
     const storageKey = `jobseeker_profile_${user._id}`;
     const payload = {
       location: updatedFields.location !== undefined ? updatedFields.location : location,
+      workEmail: updatedFields.workEmail !== undefined ? updatedFields.workEmail : workEmail,
       keySkills: updatedFields.keySkills !== undefined ? updatedFields.keySkills : keySkills,
       educationList: updatedFields.educationList !== undefined ? updatedFields.educationList : educationList,
       itSkillsList: updatedFields.itSkillsList !== undefined ? updatedFields.itSkillsList : itSkillsList,
@@ -593,8 +596,15 @@ const JobseekerProfile = () => {
                 </div>
                 <div className="profile-meta-item">
                   <HiOutlineMail className="meta-icon" />
-                  <span>{email || "Add Email"}</span>
-                  {email && <HiOutlineCheckCircle className="check-verified" />}
+                  <span>{user?.email || "Login Email"}</span>
+                  {user?.email && <HiOutlineCheckCircle className="check-verified" />}
+                </div>
+                <div className="profile-meta-item">
+                  <HiOutlineMail className="meta-icon" style={{ color: "#10b981" }} />
+                  <span style={{ color: workEmail ? "inherit" : "#9ca3af", fontStyle: workEmail ? "normal" : "italic" }}>
+                    {workEmail || "Add Work Email (for notifications)"}
+                  </span>
+                  {workEmail && <HiOutlineCheckCircle className="check-verified" style={{ color: "#10b981" }} />}
                 </div>
               </div>
             </div>
@@ -1031,7 +1041,7 @@ const JobseekerProfile = () => {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                persistUserData({ location });
+                persistUserData({ location, workEmail });
                 setActiveModal(null);
                 toast.success("Contact & Location info updated!");
               }}
@@ -1056,12 +1066,33 @@ const JobseekerProfile = () => {
                 />
               </div>
               <div className="modal-form-group">
-                <label>Email Address</label>
+                <label>
+                  Account Email
+                  <span style={{ color: "#9ca3af", fontSize: "11px", fontWeight: 400, marginLeft: "6px" }}>
+                    (login email — read‑only)
+                  </span>
+                </label>
                 <input
                   type="email"
                   className="modal-input"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={user?.email || ""}
+                  readOnly
+                  style={{ background: "#f3f4f6", color: "#6b7280", cursor: "not-allowed" }}
+                />
+              </div>
+              <div className="modal-form-group">
+                <label>
+                  Work Email
+                  <span style={{ color: "#9ca3af", fontSize: "11px", fontWeight: 400, marginLeft: "6px" }}>
+                    (application & notification emails go here)
+                  </span>
+                </label>
+                <input
+                  type="email"
+                  className="modal-input"
+                  placeholder="e.g. yourname@company.com"
+                  value={workEmail}
+                  onChange={(e) => setWorkEmail(e.target.value)}
                 />
               </div>
 

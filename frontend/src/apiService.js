@@ -109,12 +109,19 @@ export const deleteJob = async (jobId) => {
 
 // ─── Wishlist ────────────────────────────────────────────────────────────────
 
-export const fetchWishlist = async () => {
+export const fetchWishlist = async (force = false) => {
+  const cacheKey = "user_wishlist";
+  if (!force) {
+    const cached = getCached(cacheKey, 15000);
+    if (cached) return cached;
+  }
   try {
     const { data } = await axios.get(`${API_URL}/wishlist`, {
       withCredentials: true,
     });
-    return { wishlist: data.wishlist, offline: false };
+    const result = { wishlist: data.wishlist, offline: false };
+    setCached(cacheKey, result);
+    return result;
   } catch (error) {
     console.error("fetchWishlist error:", error);
     return { wishlist: [], offline: true };
@@ -122,6 +129,7 @@ export const fetchWishlist = async () => {
 };
 
 export const toggleWishlist = async (jobId) => {
+  clearCache("user_wishlist");
   const { data } = await axios.post(
     `${API_URL}/wishlist/toggle/${jobId}`,
     {},
@@ -143,6 +151,7 @@ export const checkWishlist = async (jobId) => {
 };
 
 export const removeFromWishlist = async (jobId) => {
+  clearCache("user_wishlist");
   try {
     const { data } = await axios.delete(`${API_URL}/wishlist/${jobId}`, {
       withCredentials: true,
@@ -231,12 +240,19 @@ export const updateApplicationStatus = async (id, status) => {
 
 // ─── MongoDB Atlas Separate Collections Helpers ─────────────────────────────
 
-export const fetchJobseekerProfile = async () => {
+export const fetchJobseekerProfile = async (force = false) => {
+  const cacheKey = "jobseeker_full_profile";
+  if (!force) {
+    const cached = getCached(cacheKey, 20000);
+    if (cached) return cached;
+  }
   try {
     const { data } = await axios.get(`${API_URL}/user/jobseeker/profile`, {
       withCredentials: true,
     });
-    return { profile: data.profile, offline: false };
+    const result = { profile: data.profile, offline: false };
+    setCached(cacheKey, result);
+    return result;
   } catch (error) {
     console.error("fetchJobseekerProfile error:", error);
     return { profile: null, offline: true };
@@ -244,6 +260,7 @@ export const fetchJobseekerProfile = async () => {
 };
 
 export const updateJobseekerProfileApi = async (profileData) => {
+  clearCache("jobseeker_full_profile");
   try {
     const { data } = await axios.put(`${API_URL}/user/jobseeker/profile`, profileData, {
       withCredentials: true,
@@ -267,12 +284,19 @@ export const fetchJobseekerProfileByUserId = async (userId) => {
   }
 };
 
-export const fetchEmployerFullProfile = async () => {
+export const fetchEmployerFullProfile = async (force = false) => {
+  const cacheKey = "employer_full_profile";
+  if (!force) {
+    const cached = getCached(cacheKey, 20000);
+    if (cached) return cached;
+  }
   try {
     const { data } = await axios.get(`${API_URL}/user/employer/full-profile`, {
       withCredentials: true,
     });
-    return { profile: data.profile, offline: false };
+    const result = { profile: data.profile, offline: false };
+    setCached(cacheKey, result);
+    return result;
   } catch (error) {
     console.error("fetchEmployerFullProfile error:", error);
     return { profile: null, offline: true };
@@ -280,6 +304,7 @@ export const fetchEmployerFullProfile = async () => {
 };
 
 export const updateEmployerFullProfileApi = async (profileData) => {
+  clearCache("employer_full_profile");
   try {
     const { data } = await axios.put(`${API_URL}/user/employer/full-profile`, profileData, {
       withCredentials: true,

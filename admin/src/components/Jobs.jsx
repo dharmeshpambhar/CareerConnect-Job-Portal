@@ -87,8 +87,9 @@ const Jobs = () => {
       </div>
 
       {loading ? (
-        <div style={{ display: "flex", justifyContent: "center", padding: "3rem", color: "#fff" }}>
-          <div>Loading job listings...</div>
+        <div className="admin-loader">
+          <div className="admin-spinner" />
+          <span>Loading job listings...</span>
         </div>
       ) : (
         <div className="glass-panel" style={{ overflow: "hidden" }}>
@@ -107,8 +108,11 @@ const Jobs = () => {
               <tbody>
                 {filteredJobs.length === 0 ? (
                   <tr>
-                    <td colSpan="6" style={{ textAlignment: "center", color: "var(--text-muted)" }}>
-                      No job postings match your criteria.
+                    <td colSpan="6">
+                      <div className="empty-state">
+                        <span className="empty-state-icon">💼</span>
+                        <span className="empty-state-text">No job postings match your criteria.</span>
+                      </div>
                     </td>
                   </tr>
                 ) : (

@@ -4,6 +4,7 @@ import { Application } from "../models/applicationSchema.js";
 import ErrorHandler from "../middlewares/error.js";
 import { User } from "../models/userSchema.js";
 import { Employer } from "../models/employerSchema.js";
+import { Jobseeker } from "../models/jobseekerSchema.js";
 import mongoose from "mongoose";
 
 // Helper function to attach populated employer & company details to jobs

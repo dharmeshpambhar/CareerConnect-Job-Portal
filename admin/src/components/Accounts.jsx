@@ -124,8 +124,9 @@ const Accounts = () => {
       </div>
 
       {loading ? (
-        <div style={{ display: "flex", justifyContent: "center", padding: "3rem", color: "#fff" }}>
-          <div>Loading accounts list...</div>
+        <div className="admin-loader">
+          <div className="admin-spinner" />
+          <span>Loading accounts...</span>
         </div>
       ) : (
         <div className="glass-panel" style={{ overflow: "hidden" }}>
@@ -143,8 +144,11 @@ const Accounts = () => {
               <tbody>
                 {filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan="5" style={{ textAlignment: "center", color: "var(--text-muted)" }}>
-                      No accounts match your criteria.
+                    <td colSpan="5">
+                      <div className="empty-state">
+                        <span className="empty-state-icon">👤</span>
+                        <span className="empty-state-text">No accounts match your criteria.</span>
+                      </div>
                     </td>
                   </tr>
                 ) : (
@@ -196,24 +200,37 @@ const Accounts = () => {
               </button>
             </div>
             <form onSubmit={handleUpdate}>
-              <div className="form-group">
-                <label>Name</label>
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  style={{ paddingLeft: "1rem" }}
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  required
-                />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 1rem" }}>
+                <div className="form-group">
+                  <label>Full Name</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Enter full name"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Phone Number</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    placeholder="Enter phone number"
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
 
               <div className="form-group">
                 <label>Email Address</label>
-                <input 
-                  type="email" 
-                  className="form-input" 
-                  style={{ paddingLeft: "1rem" }}
+                <input
+                  type="email"
+                  className="form-input"
+                  placeholder="Enter email address"
                   value={editEmail}
                   onChange={(e) => setEditEmail(e.target.value)}
                   required
@@ -221,22 +238,9 @@ const Accounts = () => {
               </div>
 
               <div className="form-group">
-                <label>Phone Number</label>
-                <input 
-                  type="number" 
-                  className="form-input" 
-                  style={{ paddingLeft: "1rem" }}
-                  value={editPhone}
-                  onChange={(e) => setEditPhone(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
                 <label>Role</label>
-                <select 
-                  className="form-input" 
-                  style={{ paddingLeft: "1rem", background: "#0a0f1a", color: "#fff" }}
+                <select
+                  className="form-input"
                   value={editRole}
                   onChange={(e) => setEditRole(e.target.value)}
                 >

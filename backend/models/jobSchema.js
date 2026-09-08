@@ -82,4 +82,9 @@ const jobSchema = new mongoose.Schema({
   },
 });
 
+// Compound indexes for ultra-fast queries on Atlas
+jobSchema.index({ expired: 1, jobPostedOn: -1 });
+jobSchema.index({ postedBy: 1 });
+jobSchema.index({ category: 1, expired: 1 });
+
 export const Job = mongoose.model("Job", jobSchema);

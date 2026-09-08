@@ -1,19 +1,25 @@
 /* Custom CSS for Premium Glassmorphic Admin Dashboard (Light Theme) */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
 :root {
-  --bg-color: #f6f8fc;
-  --panel-bg: rgba(255, 255, 255, 0.65);
+  --bg-color: #f0f4ff;
+  --panel-bg: rgba(255, 255, 255, 0.75);
   --border-color: rgba(15, 23, 42, 0.08);
   --primary-accent: #6366f1;
-  --primary-glow: rgba(99, 102, 241, 0.15);
+  --primary-glow: rgba(99, 102, 241, 0.18);
   --secondary-accent: #06b6d4;
   --secondary-glow: rgba(6, 182, 212, 0.15);
   --text-main: #0f172a;
   --text-muted: #64748b;
-  --card-glow: rgba(99, 102, 241, 0.03);
+  --card-glow: rgba(99, 102, 241, 0.04);
   --danger-color: #ef4444;
   --success-color: #10b981;
   --warning-color: #f59e0b;
   --sidebar-width: 260px;
+  --input-bg: #f8faff;
+  --input-border: rgba(99, 102, 241, 0.15);
+  --input-focus-border: #6366f1;
+  --input-focus-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
 * {
@@ -1232,8 +1238,439 @@ body {
   transition: all 0.2s ease;
 }
 
+
 .cv-preview-box a:hover {
   background: rgba(99, 102, 241, 0.15);
   transform: translateY(-1px);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   MISSING FORM STYLES — Edit Account Details Modal & Shared Forms
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Form group: wraps label + input in a vertical stack */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-bottom: 1.1rem;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+/* Label styling inside form groups */
+.form-group label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+/* Styled form input – used in Edit Account Details modal */
+.form-input {
+  width: 100%;
+  padding: 0.72rem 1rem;
+  background: var(--input-bg);
+  border: 1.5px solid var(--input-border);
+  border-radius: 10px;
+  color: var(--text-main);
+  font-size: 0.92rem;
+  font-weight: 500;
+  outline: none;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.form-input:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+  background: #fff;
+}
+
+.form-input:focus {
+  border-color: var(--input-focus-border);
+  background: #fff;
+  box-shadow: var(--input-focus-shadow);
+}
+
+.form-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+/* Select input in form */
+.form-input[type="number"]::-webkit-inner-spin-button,
+.form-input[type="number"]::-webkit-outer-spin-button {
+  opacity: 0.5;
+}
+
+/* Search bar icon wrapper used in filter rows */
+.input-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon-wrapper > svg {
+  position: absolute;
+  left: 0.85rem;
+  color: #94a3b8;
+  font-size: 1rem;
+  pointer-events: none;
+  z-index: 1;
+  transition: color 0.2s ease;
+}
+
+.input-icon-wrapper:focus-within > svg {
+  color: var(--secondary-accent);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ENHANCED MODAL STYLES — More polished Edit Account modal
+   ══════════════════════════════════════════════════════════════════ */
+
+.modal-overlay {
+  animation: modalOverlayIn 0.2s ease forwards;
+}
+
+@keyframes modalOverlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Modal card wider for edit account */
+.modal-content {
+  width: 100%;
+  max-width: 520px;
+  animation: modalScaleIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border-radius: 20px !important;
+  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.14), 0 0 0 1px rgba(99, 102, 241, 0.08) !important;
+  overflow: hidden;
+}
+
+.modal-header {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, rgba(6, 182, 212, 0.02) 100%);
+  border-bottom: 1px solid var(--border-color);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 0;
+}
+
+.modal-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-main);
+  background: linear-gradient(135deg, var(--text-main) 0%, var(--primary-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Modal body padding when form follows header */
+.modal-content form {
+  padding: 1.5rem;
+}
+
+.modal-content .modal-header + form {
+  padding-top: 1.5rem;
+}
+
+.modal-footer {
+  background: rgba(15, 23, 42, 0.01);
+  border-top: 1px solid var(--border-color);
+  padding: 1rem 1.5rem;
+  margin-top: 0;
+}
+
+/* Enhanced save button */
+.btn-save {
+  padding: 0.65rem 1.5rem;
+  background: linear-gradient(135deg, var(--primary-accent) 0%, #4f46e5 100%);
+  border: none;
+  color: #fff;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.2px;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+}
+
+.btn-save:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+  background: linear-gradient(135deg, #818cf8 0%, #4f46e5 100%);
+}
+
+.btn-save:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Enhanced cancel button */
+.btn-cancel {
+  padding: 0.65rem 1.25rem;
+  background: transparent;
+  border: 1.5px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background: rgba(15, 23, 42, 0.04);
+  color: var(--text-main);
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   LOADING SPINNER — Replace plain text loaders
+   ══════════════════════════════════════════════════════════════════ */
+
+.admin-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 4rem 2rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.admin-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(99, 102, 241, 0.12);
+  border-top-color: var(--primary-accent);
+  border-radius: 50%;
+  animation: spinRound 0.7s linear infinite;
+}
+
+@keyframes spinRound {
+  to { transform: rotate(360deg); }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   EMPTY STATE — No results found
+   ══════════════════════════════════════════════════════════════════ */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3.5rem 1rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.empty-state-icon {
+  font-size: 2.5rem;
+  opacity: 0.35;
+}
+
+.empty-state-text {
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ENHANCED STAT CARDS
+   ══════════════════════════════════════════════════════════════════ */
+
+.stat-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.1) !important;
+}
+
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--text-main) 0%, var(--primary-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.stat-card.cyan .stat-value {
+  background: linear-gradient(135deg, #0f172a 0%, var(--secondary-accent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.stat-card.emerald .stat-value {
+  background: linear-gradient(135deg, #0f172a 0%, var(--success-color) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.stat-card.amber .stat-value {
+  background: linear-gradient(135deg, #0f172a 0%, var(--warning-color) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ENHANCED SIDEBAR
+   ══════════════════════════════════════════════════════════════════ */
+
+.sidebar {
+  box-shadow: 4px 0 24px rgba(15, 23, 42, 0.06);
+}
+
+.sidebar-logo > span:first-child {
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.sidebar-link {
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar-link::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 0;
+  background: var(--primary-accent);
+  border-radius: 0 3px 3px 0;
+  transition: height 0.25s ease;
+}
+
+.sidebar-link.active::before {
+  height: 60%;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ENHANCED TABLE ROW HOVER
+   ══════════════════════════════════════════════════════════════════ */
+
+.admin-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ENHANCED GLASS PANEL
+   ══════════════════════════════════════════════════════════════════ */
+
+.glass-panel {
+  background: var(--panel-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.6);
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255,255,255,0.8);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ENHANCED PAGE TITLES
+   ══════════════════════════════════════════════════════════════════ */
+
+.page-title {
+  font-size: 1.9rem;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  margin-bottom: 0.4rem;
+  background: linear-gradient(135deg, var(--text-main) 0%, var(--primary-accent) 60%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.page-subtitle {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 2rem;
+  font-weight: 400;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ROLE BADGE IN MODAL SELECT — Styled dropdown
+   ══════════════════════════════════════════════════════════════════ */
+
+.form-input[role="listbox"],
+select.form-input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
+  cursor: pointer;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   FILTER ROW & SEARCH INPUT REFINEMENTS
+   ══════════════════════════════════════════════════════════════════ */
+
+.filter-row {
+  display: flex;
+  gap: 0.85rem;
+  margin-bottom: 1.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.72rem 1rem 0.72rem 2.6rem;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1.5px solid rgba(15, 23, 42, 0.1);
+  border-radius: 10px;
+  color: var(--text-main);
+  outline: none;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.search-input:focus {
+  border-color: var(--secondary-accent);
+  box-shadow: 0 0 0 3px var(--secondary-glow);
+  background: #fff;
+}
+
+.select-filter {
+  padding: 0.72rem 1.75rem 0.72rem 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1.5px solid rgba(15, 23, 42, 0.1);
+  color: var(--text-main);
+  border-radius: 10px;
+  outline: none;
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.select-filter:focus {
+  border-color: var(--secondary-accent);
+  box-shadow: 0 0 0 3px var(--secondary-glow);
 }
 

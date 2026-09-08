@@ -78,4 +78,10 @@ const applicationSchema = new mongoose.Schema({
   },
 });
 
+// Indexes for fast application queries, applicant list, employer dashboard, and status lookups
+applicationSchema.index({ "applicantID.user": 1, createdAt: -1 });
+applicationSchema.index({ "employerID.user": 1, createdAt: -1 });
+applicationSchema.index({ jobId: 1 });
+applicationSchema.index({ status: 1 });
+
 export const Application = mongoose.model("Application", applicationSchema);
