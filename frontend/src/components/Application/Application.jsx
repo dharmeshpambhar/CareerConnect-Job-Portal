@@ -1,7 +1,7 @@
 import axios from "axios";
 import React, { useContext, useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { useNavigate, useParams, Navigate } from "react-router-dom";
+import { useNavigate, useParams, Navigate, Link } from "react-router-dom";
 import { Context } from "../../main";
 import { FaRegUser } from "react-icons/fa";
 import { MdOutlineMailOutline, MdOutlinePhone } from "react-icons/md";
@@ -23,6 +23,7 @@ const Application = () => {
   const [resume, setResume] = useState(null);
   const [fileError, setFileError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [notifyEmail, setNotifyEmail] = useState(""); // workEmail for notifications
 
   // Fetch job details on load
   useEffect(() => {
@@ -46,6 +47,26 @@ const Application = () => {
       setPhone(user.phone.toString());
     }
   }, [user]);
+
+  // Fetch jobseeker profile to get workEmail (notification email)
+  useEffect(() => {
+    if (isAuthorized && user && user.role === "Job Seeker") {
+      axios
+        .get("http://localhost:4000/api/v1/jobseeker/profile", { withCredentials: true })
+        .then((res) => {
+          const profile = res.data.profile;
+          // Prefer workEmail; fall back to login email
+          const preferred = (profile?.workEmail && profile.workEmail.trim() !== "")
+            ? profile.workEmail.trim()
+            : (user?.email || "");
+          setNotifyEmail(preferred);
+        })
+        .catch(() => {
+          // If fetch fails, fall back to login email
+          setNotifyEmail(user?.email || "");
+        });
+    }
+  }, [isAuthorized, user]);
 
   // Handle file input changes with validation
   const handleFileChange = (event) => {
@@ -95,7 +116,8 @@ const Application = () => {
 
     const formData = new FormData();
     formData.append("name", user?.name || "");
-    formData.append("email", user?.email || "");
+    // Use workEmail (notification email) if set; otherwise fall back to login email
+    formData.append("email", notifyEmail || user?.email || "");
     formData.append("phone", phone);
     formData.append("address", address);
     formData.append("coverLetter", combinedCoverLetter);
@@ -136,8 +158,48 @@ const Application = () => {
     return <Navigate to="/login" />;
   }
 
-  const initial = (job.category || "J").trim().charAt(0).toUpperCase();
-  const comColor = job.category ? "#6366f1" : "#1e293b";
+  const getCompanyName = (j) => {
+    if (!j) return "Verified Company";
+    if (j.companyName && typeof j.companyName === "string" && j.companyName.trim() !== "") {
+      return j.companyName.trim();
+    }
+    if (j.postedBy?.companyName && typeof j.postedBy.companyName === "string" && j.postedBy.companyName.trim() !== "") {
+      return j.postedBy.companyName.trim();
+    }
+    if (j.postedBy?.company?.name && typeof j.postedBy.company.name === "string" && j.postedBy.company.name.trim() !== "") {
+      return j.postedBy.company.name.trim();
+    }
+    if (j.postedBy?.name && typeof j.postedBy.name === "string" && j.postedBy.name.trim() !== "") {
+      return `${j.postedBy.name.trim()}'s Company`;
+    }
+    return j.category || "Verified Employer";
+  };
+
+  const getEmployerId = (j) => {
+    if (!j) return null;
+    if (j.postedBy?._id) return j.postedBy._id;
+    if (typeof j.postedBy === "string") return j.postedBy;
+    return null;
+  };
+
+  const getCompanyColor = (name) => {
+    const colors = ["#2563eb", "#0284c7", "#0d9488", "#1d4ed8", "#0891b2", "#059669"];
+    let hash = 0;
+    const str = name || "Tech";
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return colors[Math.abs(hash) % colors.length];
+  };
+
+  const companyTitleName = getCompanyName(job);
+  const companyLogoUrl =
+    job.postedBy?.profilePicture?.url ||
+    job.postedBy?.company?.profilePicture?.url ||
+    job.profilePicture?.url ||
+    job.employer?.profilePicture?.url;
+  const initial = (companyTitleName || job.title || "C").trim().charAt(0).toUpperCase();
+  const comColor = getCompanyColor(companyTitleName || job.category);
 
   return (
     <section className="apply-page-v2">
@@ -145,13 +207,53 @@ const Application = () => {
         <div className="apply-card-v2">
           {/* Header Banner */}
           <div className="apply-header-banner">
-            <div className="apply-header-banner-logo" style={{ backgroundColor: comColor }}>
-              {initial}
-            </div>
+            {getEmployerId(job) ? (
+              <Link
+                to={`/company/view/${getEmployerId(job)}`}
+                className="apply-header-banner-logo-link"
+                title={`View ${companyTitleName}'s profile`}
+              >
+                <div
+                  className="apply-header-banner-logo"
+                  style={companyLogoUrl ? { backgroundColor: "#ffffff" } : { backgroundColor: comColor }}
+                >
+                  {companyLogoUrl ? (
+                    <img
+                      src={companyLogoUrl}
+                      alt={companyTitleName}
+                      className="apply-banner-logo-img"
+                    />
+                  ) : (
+                    initial
+                  )}
+                </div>
+              </Link>
+            ) : (
+              <div
+                className="apply-header-banner-logo"
+                style={companyLogoUrl ? { backgroundColor: "#ffffff" } : { backgroundColor: comColor }}
+              >
+                {companyLogoUrl ? (
+                  <img
+                    src={companyLogoUrl}
+                    alt={companyTitleName}
+                    className="apply-banner-logo-img"
+                  />
+                ) : (
+                  initial
+                )}
+              </div>
+            )}
             <div className="apply-header-banner-info">
               <span>Submit Application</span>
               <h2>{job.title}</h2>
-              <p>{`${job.category || ""} • ${job.city || ""}, ${job.country || ""}`}</p>
+              <p>
+                {companyTitleName ? <strong>{companyTitleName}</strong> : null}
+                {companyTitleName && job.category ? " • " : ""}
+                {job.category ? <span>{job.category}</span> : null}
+                {(companyTitleName || job.category) && (job.city || job.country) ? " • " : ""}
+                {`${job.city || ""}${job.city && job.country ? ", " : ""}${job.country || ""}`}
+              </p>
             </div>
           </div>
 

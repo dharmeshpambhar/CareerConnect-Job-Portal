@@ -37,7 +37,7 @@ export const postApplication = catchAsyncErrors(async (req, res, next) => {
       return next(new ErrorHandler("Failed to upload Resume to Cloudinary", 500));
     }
 
-    const { name, email, coverLetter, phone, address, jobId } = req.body;
+    const { name, email: formEmail, coverLetter, phone, address, jobId } = req.body;
     const applicantID = { user: req.user._id, role: "Job Seeker" };
 
     if (!jobId) return next(new ErrorHandler("Job not found!", 404));
@@ -55,6 +55,17 @@ export const postApplication = catchAsyncErrors(async (req, res, next) => {
         )
       );
     }
+
+    // ── Resolve notification email: prefer workEmail over login email ─────
+    let email = formEmail; // default: what the form sent
+    try {
+      const jsDoc = await Jobseeker.findById(req.user._id).select("workEmail email").lean();
+      if (jsDoc?.workEmail && jsDoc.workEmail.trim() !== "") {
+        email = jsDoc.workEmail.trim();
+      } else if (jsDoc?.email) {
+        email = jsDoc.email;
+      }
+    } catch (_) { /* keep formEmail as fallback */ }
 
     const employerID = { user: jobDetails.postedBy, role: "Employer" };
 

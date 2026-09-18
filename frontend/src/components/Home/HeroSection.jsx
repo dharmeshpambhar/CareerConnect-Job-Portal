@@ -106,7 +106,7 @@ const HeroSection = () => {
               <FiTrendingUp className="hero-badge-icon" />
               <span>India's #1 Job Discovery Platform</span>
               <span className="hero-badge-dot" />
-              <HiSparkles className="hero-badge-sparkle" />
+              
             </div>
 
             {/* Headline */}
@@ -198,7 +198,6 @@ const HeroSection = () => {
           {/* ── RIGHT COLUMN — Job Application Process ── */}
           <div className="hero-v2-right">
             <div className="apflow-panel">
-
               {/* Panel header */}
               <div className="apflow-header">
                 <div className="apflow-header-left">
@@ -277,12 +276,6 @@ const HeroSection = () => {
               >
                 Start Your Journey <FiArrowRight />
               </button>
-            </div>
-
-            {/* Floating mini badge */}
-            <div className="hero-mini-badge hero-mini-badge-1">
-              <FiCheckCircle />
-              <span>Profile Verified</span>
             </div>
           </div>
         </div>

@@ -1,12 +1,11 @@
-# CareerConnect Job Portal Web-Application with MERN Stack
+# Job Portal App with MERN Stack
 
-A comprehensive CareerConnect job portal Web-application built using the MERN (MongoDB, Express.js, React.js, Node.js) stack. This application allows users to browse job listings, apply for jobs, and manage their applications seamlessly.
+A comprehensive job portal application built using the MERN (MongoDB, Express.js, React.js, Node.js) stack. This application allows users to browse job listings, apply for jobs, and manage their applications seamlessly.
 
 ## Features
 
 - **User Authentication:** Secure authentication using JWT (JSON Web Tokens) for both job seekers and employers.
 - **Job Listings:** Browse through a wide range of job listings fetched from MongoDB.
-- **Job Recommendations:** Personalized AI job recommendations based on user preferences and profile.
 - **Application Management:** Job seekers can manage their job applications, and employers can view and manage received applications.
 - **Responsive Design:** Ensures a seamless experience across all devices.
 
@@ -77,13 +76,7 @@ To get a local copy up and running follow these simple steps.
    ```sh
    npm run dev
    ```
-7. Run the application admin (make sure you are in `/admin` directory) :
-
-   ```sh
-   npm run dev
-   ```
-
-8. Open your browser and navigate to `http://localhost:5173`(frontend), `http://localhost:5174`(admin) to view the app.
+7. Open your browser and navigate to `http://localhost:5173` to view the app.
 
 ## Contributing
 

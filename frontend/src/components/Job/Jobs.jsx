@@ -2,9 +2,23 @@ import React, { useContext, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Context } from "../../main";
 import toast from "react-hot-toast";
-import { FaBookmark, FaRegBookmark } from "react-icons/fa";
-import { FiSearch, FiFilter, FiMapPin, FiBriefcase, FiClock, FiUsers, FiLayers, FiX, FiZap } from "react-icons/fi";
-import { FaRupeeSign, FaStar } from "react-icons/fa";
+import { FaBookmark, FaRegBookmark, FaRupeeSign, FaStar } from "react-icons/fa";
+import {
+  FiSearch,
+  FiFilter,
+  FiBriefcase,
+  FiAward,
+  FiClock,
+  FiUsers,
+  FiLayers,
+  FiX,
+  FiZap,
+  FiMapPin,
+  FiArrowRight,
+  FiTrendingUp,
+  FiCheck,
+} from "react-icons/fi";
+import { MdOutlineVerified } from "react-icons/md";
 import { fetchAllJobs, toggleWishlist, fetchWishlist, fetchAiMatchRecommendations } from "../../apiService";
 
 const Jobs = () => {
@@ -15,10 +29,13 @@ const Jobs = () => {
 
   // Filter States — pre-seeded from hero search bar URL params
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || searchParams.get("cat") || "All");
   const [selectedLocation, setSelectedLocation] = useState(searchParams.get("loc") || "All");
   const [selectedExperience, setSelectedExperience] = useState("All");
   const [selectedJobType, setSelectedJobType] = useState("All");
   const [selectedSalary, setSelectedSalary] = useState("All");
+  const [selectedDatePosted, setSelectedDatePosted] = useState("All");
+  const [selectedSort, setSelectedSort] = useState("Latest");
 
   // AI Recommendations State
   const [aiModalOpen, setAiModalOpen] = useState(false);
@@ -79,10 +96,13 @@ const Jobs = () => {
 
   const resetFilters = () => {
     setSearchQuery("");
+    setSelectedCategory("All");
     setSelectedLocation("All");
     setSelectedExperience("All");
     setSelectedJobType("All");
     setSelectedSalary("All");
+    setSelectedDatePosted("All");
+    setSelectedSort("Latest");
   };
 
   // ── AI Match Handler ──────────────────────────────────────────────────────
@@ -233,270 +253,613 @@ const Jobs = () => {
     return "Relevant Match";
   };
 
-  // Get unique locations/countries for select list
-  const uniqueLocations = Array.from(new Set(jobs.map((job) => job.country))).filter(Boolean);
+  // Unique categories derived from jobs plus standard options
+  const standardCategories = [
+    "Frontend Web Development",
+    "MERN Stack Development",
+    "MEAN Stack Development",
+    "Mobile App Development",
+    "Graphics & Design",
+    "Artificial Intelligence",
+    "Account & Finance",
+    "Video Animation",
+    "Business Development Executive",
+    "Data Entry Operator",
+  ];
+  const uniqueCategories = Array.from(
+    new Set([...jobs.map((job) => job.category).filter(Boolean), ...standardCategories])
+  ).sort();
 
-  // Filter Jobs Array in React
-  const filteredJobs = jobs.filter((job) => {
-    const q = (searchQuery || "").trim().toLowerCase();
+  // Unique locations (both countries and cities)
+  const uniqueCountries = Array.from(new Set(jobs.map((job) => job.country).filter(Boolean))).sort();
+  const uniqueCities = Array.from(new Set(jobs.map((job) => job.city).filter(Boolean))).sort();
+  const uniqueLocations = Array.from(new Set([...uniqueCountries, ...uniqueCities])).sort();
 
-    // Search Query Check — matches job title, company name, category, city, country, or description
-    const company = getCompanyName(job).toLowerCase();
-    const titleMatch = (job.title || "").toLowerCase().includes(q);
-    const catMatch = (job.category || "").toLowerCase().includes(q);
-    const countryMatch = (job.country || "").toLowerCase().includes(q);
-    const cityMatch = (job.city || "").toLowerCase().includes(q);
-    const companyMatch = company.includes(q);
-    const descMatch = (job.description || "").toLowerCase().includes(q);
-    const matchesSearch = !q || titleMatch || catMatch || countryMatch || cityMatch || companyMatch || descMatch;
+  // Unique experience options
+  const standardExperiences = [
+    "Entry Level",
+    "Junior (1-2 years)",
+    "Mid Level (3-5 years)",
+    "Senior (5-8 years)",
+    "Lead / Principal (8+ years)",
+    "2+ Years",
+    "5+ Years",
+  ];
+  const uniqueExperiences = Array.from(
+    new Set([...standardExperiences, ...jobs.map((j) => j.experience).filter(Boolean)])
+  );
 
-    // Location Check — exact from dropdown, partial match for URL params
-    const matchesLocation =
-      selectedLocation === "All" ||
-      job.country === selectedLocation ||
-      job.country.toLowerCase().includes(selectedLocation.toLowerCase()) ||
-      (job.city && job.city.toLowerCase().includes(selectedLocation.toLowerCase()));
+  // Unique job types
+  const standardJobTypes = [
+    "Full-Time",
+    "Part-Time",
+    "Contract",
+    "Internship",
+    "Freelance",
+    "Remote",
+    "Hybrid",
+    "Onsite",
+  ];
+  const uniqueJobTypes = Array.from(
+    new Set([...standardJobTypes, ...jobs.map((j) => j.jobType).filter(Boolean)])
+  );
 
-    // Experience Check
-    const expVal = job.experience || deriveExperience(job._id);
-    const matchesExperience = selectedExperience === "All" ||
-      expVal === selectedExperience ||
-      expVal.toLowerCase().includes(selectedExperience.toLowerCase()) ||
-      selectedExperience.toLowerCase().includes(expVal.toLowerCase());
+  // Active filter count
+  const activeFilterCount = [
+    searchQuery.trim() !== "",
+    selectedCategory !== "All",
+    selectedLocation !== "All",
+    selectedExperience !== "All",
+    selectedJobType !== "All",
+    selectedSalary !== "All",
+    selectedDatePosted !== "All",
+    selectedSort !== "Latest",
+  ].filter(Boolean).length;
 
-    // Job Type Check
-    const typeVal = job.jobType || deriveJobType(job._id);
-    const matchesJobType = selectedJobType === "All" ||
-      typeVal === selectedJobType ||
-      typeVal.toLowerCase().includes(selectedJobType.toLowerCase()) ||
-      selectedJobType.toLowerCase().includes(typeVal.toLowerCase());
+  // Filter & Sort Jobs Array in React
+  const filteredJobs = jobs
+    .filter((job) => {
+      const q = (searchQuery || "").trim().toLowerCase();
 
-    // Salary Check
-    const salVal = getSalaryVal(job);
-    let matchesSalary = true;
-    if (selectedSalary === "Under ₹3 Lakhs") {
-      matchesSalary = salVal < 30000 || (salVal >= 150000 && salVal < 300000);
-    } else if (selectedSalary === "₹3 Lakhs - ₹6 Lakhs") {
-      matchesSalary = (salVal >= 30000 && salVal <= 60000) || (salVal >= 300000 && salVal <= 600000);
-    } else if (selectedSalary === "₹6 Lakhs - ₹12 Lakhs") {
-      matchesSalary = (salVal >= 60000 && salVal <= 100000) || (salVal >= 600000 && salVal <= 1200000);
-    } else if (selectedSalary === "Over ₹12 Lakhs") {
-      matchesSalary = salVal > 100000 || salVal > 1200000;
+      // Search Query Check — matches job title, company name, category, city, country, or description
+      const company = getCompanyName(job).toLowerCase();
+      const titleMatch = (job.title || "").toLowerCase().includes(q);
+      const catMatch = (job.category || "").toLowerCase().includes(q);
+      const countryMatch = (job.country || "").toLowerCase().includes(q);
+      const cityMatch = (job.city || "").toLowerCase().includes(q);
+      const companyMatch = company.includes(q);
+      const descMatch = (job.description || "").toLowerCase().includes(q);
+      const matchesSearch = !q || titleMatch || catMatch || countryMatch || cityMatch || companyMatch || descMatch;
+
+      // Category Check
+      const matchesCategory =
+        selectedCategory === "All" ||
+        job.category === selectedCategory ||
+        (job.category && job.category.toLowerCase() === selectedCategory.toLowerCase());
+
+      // Location Check — exact or partial match across city and country
+      const matchesLocation =
+        selectedLocation === "All" ||
+        job.country === selectedLocation ||
+        job.city === selectedLocation ||
+        (job.country && job.country.toLowerCase().includes(selectedLocation.toLowerCase())) ||
+        (job.city && job.city.toLowerCase().includes(selectedLocation.toLowerCase()));
+
+      // Experience Check
+      const expVal = job.experience || deriveExperience(job._id);
+      const matchesExperience =
+        selectedExperience === "All" ||
+        expVal === selectedExperience ||
+        expVal.toLowerCase().includes(selectedExperience.toLowerCase()) ||
+        selectedExperience.toLowerCase().includes(expVal.toLowerCase());
+
+      // Job Type Check
+      const typeVal = job.jobType || deriveJobType(job._id);
+      const matchesJobType =
+        selectedJobType === "All" ||
+        typeVal === selectedJobType ||
+        typeVal.toLowerCase().includes(selectedJobType.toLowerCase()) ||
+        selectedJobType.toLowerCase().includes(typeVal.toLowerCase());
+
+      // Salary Check
+      const salVal = getSalaryVal(job);
+      let matchesSalary = true;
+      if (selectedSalary === "Under ₹3 Lakhs") {
+        matchesSalary = salVal < 30000 || (salVal >= 150000 && salVal < 300000);
+      } else if (selectedSalary === "₹3 Lakhs - ₹6 Lakhs") {
+        matchesSalary = (salVal >= 30000 && salVal <= 60000) || (salVal >= 300000 && salVal <= 600000);
+      } else if (selectedSalary === "₹6 Lakhs - ₹12 Lakhs") {
+        matchesSalary = (salVal >= 60000 && salVal <= 100000) || (salVal >= 600000 && salVal <= 1200000);
+      } else if (selectedSalary === "Over ₹12 Lakhs") {
+        matchesSalary = salVal > 100000 || salVal > 1200000;
+      }
+
+      // Date Posted Check
+      let matchesDatePosted = true;
+      if (selectedDatePosted !== "All" && job.jobPostedOn) {
+        const postedTime = new Date(job.jobPostedOn).getTime();
+        const now = Date.now();
+        const diffHours = (now - postedTime) / (1000 * 60 * 60);
+        if (selectedDatePosted === "Past 24 Hours") {
+          matchesDatePosted = diffHours <= 24;
+        } else if (selectedDatePosted === "Past Week") {
+          matchesDatePosted = diffHours <= 24 * 7;
+        } else if (selectedDatePosted === "Past Month") {
+          matchesDatePosted = diffHours <= 24 * 30;
+        }
+      }
+
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesLocation &&
+        matchesExperience &&
+        matchesJobType &&
+        matchesSalary &&
+        matchesDatePosted
+      );
+    })
+    .sort((a, b) => {
+      if (selectedSort === "Latest") {
+        return new Date(b.jobPostedOn || 0) - new Date(a.jobPostedOn || 0);
+      }
+      if (selectedSort === "Oldest") {
+        return new Date(a.jobPostedOn || 0) - new Date(b.jobPostedOn || 0);
+      }
+      if (selectedSort === "Salary: High to Low") {
+        return getSalaryVal(b) - getSalaryVal(a);
+      }
+      if (selectedSort === "Salary: Low to High") {
+        return getSalaryVal(a) - getSalaryVal(b);
+      }
+      if (selectedSort === "Most Vacancies") {
+        return (b.vacancies || 1) - (a.vacancies || 1);
+      }
+      return 0;
+    });
+
+  // Quick Filter Pills definitions
+  const QUICK_FILTERS = [
+    { id: "all", label: "All Positions", type: "all" },
+    { id: "remote", label: "Remote", type: "jobType", val: "Remote" },
+    { id: "fulltime", label: "Full-Time", type: "jobType", val: "Full-Time" },
+    { id: "internship", label: "Internship", type: "jobType", val: "Internship" },
+    { id: "contract", label: "Contract", type: "jobType", val: "Contract" },
+    { id: "frontend", label: "Frontend", type: "cat", val: "Frontend Web Development" },
+    { id: "mern", label: "MERN Stack", type: "cat", val: "MERN Stack Development" },
+    { id: "ai", label: "AI & ML", type: "cat", val: "Artificial Intelligence" },
+    { id: "design", label: "Design", type: "cat", val: "Graphics & Design" },
+    { id: "mobile", label: "Mobile Dev", type: "cat", val: "Mobile App Development" },
+  ];
+
+  const handleQuickFilter = (qf) => {
+    if (qf.type === "all") {
+      resetFilters();
+    } else if (qf.type === "jobType") {
+      setSelectedJobType((prev) => (prev === qf.val ? "All" : qf.val));
+    } else if (qf.type === "cat") {
+      setSelectedCategory((prev) => (prev === qf.val ? "All" : qf.val));
     }
+  };
 
-    return matchesSearch && matchesLocation && matchesExperience && matchesJobType && matchesSalary;
-  });
+  const isQuickActive = (qf) => {
+    if (qf.type === "all") {
+      return activeFilterCount === 0;
+    }
+    if (qf.type === "jobType") {
+      return selectedJobType === qf.val;
+    }
+    if (qf.type === "cat") {
+      return selectedCategory === qf.val;
+    }
+    return false;
+  };
+
+  const isNewJob = (dateStr) => {
+    if (!dateStr) return false;
+    const diffDays = (Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24);
+    return diffDays <= 7;
+  };
 
   return (
-    <section className="jobs-page-v2">
+    <section className="jobs-page-v3">
+      {/* Ambient background glow accents */}
+      <div className="jobs-v3-ambient-glow jobs-v3-glow-1"></div>
+      <div className="jobs-v3-ambient-glow jobs-v3-glow-2"></div>
+
       <div className="container">
-        {/* Header Block */}
-        <div className="jobs-v2-header">
-          <div className="jobs-v2-header-text">
-            <h1>Available Positions</h1>
-            <p>Discover, review and apply for jobs suited for your stack.</p>
+        {/* Top Hero Showcase */}
+        <div className="jobs-v3-hero">
+          <div className="jobs-v3-hero-left">
+            <div className="jobs-hero-badge">
+              <span className="jobs-hero-badge-pulse"></span>
+              <span className="jobs-hero-badge-text"> Match Your Skills With Your Dream Career</span>
+            </div>
+            <h1 className="jobs-v3-hero-title">
+              Find Your Next Role <span className="jobs-gradient-text">&amp; Level Up</span>
+            </h1>
+            <p className="jobs-v3-hero-sub">
+              Browse hand-picked developer, designer, and AI roles from vetted engineering teams worldwide.
+            </p>
           </div>
-          <button className="ai-match-btn" onClick={handleAiMatch}>
-            <span style={{ fontSize: "1.1rem" }}>✦</span> AI Match Recommendations
-          </button>
+
+          <div className="jobs-v3-hero-right">
+            <button className="ai-match-btn-v3" onClick={handleAiMatch}>
+              {/* Animated background orbs */}
+              <div className="ai-match-orb ai-match-orb-1" />
+              <div className="ai-match-orb ai-match-orb-2" />
+              {/* Shimmer sweep */}
+              <div className="ai-match-btn-shine" />
+
+              {/* Icon with glow ring */}
+              <div className="ai-match-icon-wrap">
+                <div className="ai-match-icon-ring" />
+                <FiZap className="ai-match-zap-icon" />
+              </div>
+
+              {/* Text */}
+              <div className="ai-match-text-group">
+                <span className="ai-match-btn-title">AI Match Engine</span>
+                <span className="ai-match-btn-sub">Instant recommendations for your stack</span>
+              </div>
+
+              {/* Badge */}
+              <span className="ai-match-badge-tag">
+                <span className="ai-match-badge-dot" />
+                Smart Match
+              </span>
+            </button>
+          </div>
         </div>
 
-        {/* Sidebar + List Container Grid */}
-        <div className="jobs-v2-grid">
-          {/* Sidebar Filter Panel */}
-          <aside className="filters-sidebar">
-            <div className="filters-sidebar-header">
-              <h3>
-                <FiFilter /> Job Filters
-              </h3>
-              <button onClick={resetFilters}>Reset All</button>
-            </div>
+        {/* Quick Filter Pills Row */}
+        <div className="jobs-quick-pills-wrap">
+          <span className="jobs-quick-label">Popular:</span>
+          <div className="jobs-quick-pills-list">
+            {QUICK_FILTERS.map((qf) => {
+              const active = isQuickActive(qf);
+              return (
+                <button
+                  key={qf.id}
+                  className={`jobs-quick-pill ${active ? "active" : ""}`}
+                  onClick={() => handleQuickFilter(qf)}
+                >
+                  {qf.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-            <div className="filter-group">
-              <label>Search Query</label>
-              <div className="filter-input-wrapper">
-                <input
-                  type="text"
-                  placeholder="Job title, company name, category..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <FiSearch />
+        {/* Main Grid: Sidebar + Job Cards */}
+        <div className="jobs-v3-grid">
+          {/* Left Sidebar Filter Card */}
+          <aside className="filters-sidebar-v3">
+            <div className="filters-v3-header">
+              <div className="filters-v3-title-wrap">
+                <div className="filters-v3-icon-badge">
+                  <FiFilter />
+                </div>
+                <div>
+                  <h3 className="filters-v3-heading">Filter Positions</h3>
+                  <p className="filters-v3-sub">Refine your search criteria</p>
+                </div>
               </div>
+              {activeFilterCount > 0 ? (
+                <button className="filters-v3-reset-btn active" onClick={resetFilters} title="Reset all filters">
+                  Reset ({activeFilterCount})
+                </button>
+              ) : (
+                <button className="filters-v3-reset-btn" onClick={resetFilters} title="Reset filters">
+                  Clear
+                </button>
+              )}
             </div>
 
-            <div className="filter-group">
-              <label>Location</label>
-              <select value={selectedLocation} onChange={(e) => setSelectedLocation(e.target.value)}>
-                <option value="All">All Locations</option>
-                {uniqueLocations.map((loc, idx) => (
-                  <option key={idx} value={loc}>
-                    {loc}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <div className="filters-v3-body">
+              {/* 1. Search Query */}
+              <div className="filter-v3-group">
+                <label className="filter-v3-label">
+                  <FiSearch /> Search Keyword
+                </label>
+                <div className="filter-v3-input-box">
+                  <input
+                    type="text"
+                    placeholder="Title, skill, or company..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  {searchQuery ? (
+                    <button
+                      className="filter-v3-clear-input"
+                      onClick={() => setSearchQuery("")}
+                      title="Clear search"
+                    >
+                      <FiX />
+                    </button>
+                  ) : (
+                    <FiSearch className="filter-v3-input-icon" />
+                  )}
+                </div>
+              </div>
 
-            <div className="filter-group">
-              <label>Experience Requirement</label>
-              <select value={selectedExperience} onChange={(e) => setSelectedExperience(e.target.value)}>
-                <option value="All">All Experience</option>
-                <option value="Entry Level">Entry Level</option>
-                <option value="2+ Years">2+ Years</option>
-                <option value="5+ Years">5+ Years</option>
-              </select>
-            </div>
+              {/* 2. Category */}
+              <div className="filter-v3-group">
+                <label className="filter-v3-label">
+                  <FiLayers /> Category
+                </label>
+                <div className="filter-v3-select-box">
+                  <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
+                    <option value="All">All Categories</option>
+                    {uniqueCategories.map((cat, idx) => (
+                      <option key={idx} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="filter-v3-select-arrow">▾</span>
+                </div>
+              </div>
 
-            <div className="filter-group">
-              <label>Job Type</label>
-              <select value={selectedJobType} onChange={(e) => setSelectedJobType(e.target.value)}>
-                <option value="All">All Job Types</option>
-                <option value="Remote">Remote</option>
-                <option value="Hybrid">Hybrid</option>
-                <option value="Onsite">Onsite</option>
-              </select>
-            </div>
+              {/* 3. Location */}
+              <div className="filter-v3-group">
+                <label className="filter-v3-label">
+                  <FiMapPin /> Location / City
+                </label>
+                <div className="filter-v3-select-box">
+                  <select value={selectedLocation} onChange={(e) => setSelectedLocation(e.target.value)}>
+                    <option value="All">All Locations</option>
+                    {uniqueLocations.map((loc, idx) => (
+                      <option key={idx} value={loc}>
+                        {loc}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="filter-v3-select-arrow">▾</span>
+                </div>
+              </div>
 
-            <div className="filter-group">
-              <label>Min Salary</label>
-              <select value={selectedSalary} onChange={(e) => setSelectedSalary(e.target.value)}>
-                <option value="All">All Salaries</option>
-                <option value="Under ₹3 Lakhs">Under ₹3 Lakhs</option>
-                <option value="₹3 Lakhs - ₹6 Lakhs">₹3 Lakhs - ₹6 Lakhs</option>
-                <option value="₹6 Lakhs - ₹12 Lakhs">₹6 Lakhs - ₹12 Lakhs</option>
-                <option value="Over ₹12 Lakhs">Over ₹12 Lakhs</option>
-              </select>
+              {/* 4. Experience Requirement */}
+              <div className="filter-v3-group">
+                <label className="filter-v3-label">
+                  <FiAward /> Experience Level
+                </label>
+                <div className="filter-v3-select-box">
+                  <select value={selectedExperience} onChange={(e) => setSelectedExperience(e.target.value)}>
+                    <option value="All">All Experience</option>
+                    {uniqueExperiences.map((exp, idx) => (
+                      <option key={idx} value={exp}>
+                        {exp}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="filter-v3-select-arrow">▾</span>
+                </div>
+              </div>
+
+              {/* 5. Job Type */}
+              <div className="filter-v3-group">
+                <label className="filter-v3-label">
+                  <FiBriefcase /> Employment Type
+                </label>
+                <div className="filter-v3-select-box">
+                  <select value={selectedJobType} onChange={(e) => setSelectedJobType(e.target.value)}>
+                    <option value="All">All Job Types</option>
+                    {uniqueJobTypes.map((type, idx) => (
+                      <option key={idx} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="filter-v3-select-arrow">▾</span>
+                </div>
+              </div>
+
+              {/* 6. Min Salary */}
+              <div className="filter-v3-group">
+                <label className="filter-v3-label">
+                  <FaRupeeSign /> Salary Range
+                </label>
+                <div className="filter-v3-select-box">
+                  <select value={selectedSalary} onChange={(e) => setSelectedSalary(e.target.value)}>
+                    <option value="All">All Salaries</option>
+                    <option value="Under ₹3 Lakhs">Under ₹3 Lakhs</option>
+                    <option value="₹3 Lakhs - ₹6 Lakhs">₹3 Lakhs - ₹6 Lakhs</option>
+                    <option value="₹6 Lakhs - ₹12 Lakhs">₹6 Lakhs - ₹12 Lakhs</option>
+                    <option value="Over ₹12 Lakhs">Over ₹12 Lakhs</option>
+                  </select>
+                  <span className="filter-v3-select-arrow">▾</span>
+                </div>
+              </div>
+
+              {/* 7. Date Posted */}
+              <div className="filter-v3-group">
+                <label className="filter-v3-label">
+                  <FiClock /> Date Posted
+                </label>
+                <div className="filter-v3-select-box">
+                  <select value={selectedDatePosted} onChange={(e) => setSelectedDatePosted(e.target.value)}>
+                    <option value="All">Anytime</option>
+                    <option value="Past 24 Hours">Past 24 Hours</option>
+                    <option value="Past Week">Past Week</option>
+                    <option value="Past Month">Past Month</option>
+                  </select>
+                  <span className="filter-v3-select-arrow">▾</span>
+                </div>
+              </div>
+
+              {/* 8. Sort By */}
+              <div className="filter-v3-group">
+                <label className="filter-v3-label">
+                  <FiTrendingUp /> Sort By
+                </label>
+                <div className="filter-v3-select-box">
+                  <select value={selectedSort} onChange={(e) => setSelectedSort(e.target.value)}>
+                    <option value="Latest">Latest First</option>
+                    <option value="Oldest">Oldest First</option>
+                    <option value="Salary: High to Low">Salary: High to Low</option>
+                    <option value="Salary: Low to High">Salary: Low to High</option>
+                    <option value="Most Vacancies">Most Vacancies</option>
+                  </select>
+                  <span className="filter-v3-select-arrow">▾</span>
+                </div>
+              </div>
             </div>
           </aside>
 
-          {/* Jobs List Panel */}
-          <main className="jobs-v2-list">
+          {/* Right Main Job Cards Column */}
+          <main className="jobs-v3-list">
             {filteredJobs.length > 0 ? (
               filteredJobs.map((element) => {
                 const experience = element.experience || deriveExperience(element._id);
                 const jobType = element.jobType || deriveJobType(element._id);
-                const skills = (element.skills && Array.isArray(element.skills) && element.skills.length > 0)
-                  ? element.skills
-                  : (typeof element.skills === "string" && element.skills.trim())
-                  ? element.skills.split(",").map((s) => s.trim()).filter(Boolean)
-                  : deriveSkills(element.category, element.title);
+                const skills =
+                  element.skills && Array.isArray(element.skills) && element.skills.length > 0
+                    ? element.skills
+                    : typeof element.skills === "string" && element.skills.trim()
+                    ? element.skills.split(",").map((s) => s.trim()).filter(Boolean)
+                    : deriveSkills(element.category, element.title);
                 const comColor = getCompanyColor(element.category || "Job");
                 const companyTitleName = getCompanyName(element);
                 const initial = (companyTitleName || element.category || "J").trim().charAt(0).toUpperCase();
+                const isNew = isNewJob(element.jobPostedOn);
 
                 return (
-                  <div className="job-card-v2" key={element._id}>
-                    <div className="job-card-v2-top">
-                      {/* Logo Initial Badge */}
-                      {getEmployerId(element) ? (
-                        <Link to={`/company/view/${getEmployerId(element)}`} style={{ textDecoration: "none" }} title="Click to view company profile">
-                          <div className="job-company-logo" style={{ backgroundColor: comColor, cursor: "pointer", overflow: "hidden" }}>
+                  <div className="job-card-v3" key={element._id}>
+                    {/* Card Top Row: Logo + Info + Actions */}
+                    <div className="job-card-v3-top">
+                      {/* Company Squircle Logo */}
+                      <div className="job-v3-logo-wrap">
+                        {getEmployerId(element) ? (
+                          <Link
+                            to={`/company/view/${getEmployerId(element)}`}
+                            className="job-v3-logo-link"
+                            title={`View ${companyTitleName}'s profile`}
+                          >
+                            <div
+                              className="job-v3-company-logo"
+                              style={element.postedBy?.profilePicture?.url ? { backgroundColor: "#ffffff" } : { backgroundColor: comColor }}
+                            >
+                              {element.postedBy?.profilePicture?.url ? (
+                                <img
+                                  src={element.postedBy?.profilePicture?.url}
+                                  alt={companyTitleName}
+                                  className="job-v3-logo-img"
+                                />
+                              ) : (
+                                initial
+                              )}
+                            </div>
+                          </Link>
+                        ) : (
+                          <div
+                            className="job-v3-company-logo"
+                            style={element.postedBy?.profilePicture?.url ? { backgroundColor: "#ffffff" } : { backgroundColor: comColor }}
+                          >
                             {element.postedBy?.profilePicture?.url ? (
                               <img
                                 src={element.postedBy?.profilePicture?.url}
                                 alt={companyTitleName}
-                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                className="job-v3-logo-img"
                               />
                             ) : (
                               initial
                             )}
                           </div>
-                        </Link>
-                      ) : (
-                        <div className="job-company-logo" style={{ backgroundColor: comColor, overflow: "hidden" }}>
-                          {element.postedBy?.profilePicture?.url ? (
-                            <img
-                              src={element.postedBy?.profilePicture?.url}
-                              alt={companyTitleName}
-                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                            />
-                          ) : (
-                            initial
-                          )}
-                        </div>
-                      )}
-
-                      {/* Header info */}
-                      <div className="job-card-v2-info">
-                        <h2>{element.title}</h2>
-                        <p>
-                          {getEmployerId(element) ? (
-                            <Link to={`/company/view/${getEmployerId(element)}`} className="job-card-company-link" title="Click to view company details">
-                              {companyTitleName} ↗
-                            </Link>
-                          ) : (
-                            <span>{companyTitleName}</span>
-                          )}
-                          {` • ${element.city}, ${element.country}`}
-                        </p>
+                        )}
                       </div>
 
-                      {/* Actions (Bookmark + View Role) */}
-                      <div className="job-card-v2-actions">
+                      {/* Header Main Info */}
+                      <div className="job-card-v3-info">
+                        <div className="job-v3-badges-row">
+                          <span className="job-v3-cat-tag">{element.category || "Engineering"}</span>
+                          {isNew && <span className="job-v3-new-tag">✨ New</span>}
+                        </div>
+                        <h2 className="job-v3-title">
+                          <Link to={`/job/${element._id}`}>{element.title}</Link>
+                        </h2>
+                        <div className="job-v3-company-row">
+                          {getEmployerId(element) ? (
+                            <Link
+                              to={`/company/view/${getEmployerId(element)}`}
+                              className="job-v3-company-link"
+                              title="Click to view company profile"
+                            >
+                              <span>{companyTitleName}</span>
+                              <MdOutlineVerified className="verified-ico" />
+                            </Link>
+                          ) : (
+                            <span className="job-v3-company-name">
+                              {companyTitleName}
+                              <MdOutlineVerified className="verified-ico" />
+                            </span>
+                          )}
+                          <span className="job-v3-dot">•</span>
+                          <span className="job-v3-location">
+                            <FiMapPin /> {element.city}, {element.country}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Top Right Actions */}
+                      <div className="job-card-v3-actions">
                         {user && user.role === "Job Seeker" && (
                           <button
-                            className="bookmark-btn"
+                            className={`job-v3-bookmark-btn ${isWishlisted(element._id) ? "active" : ""}`}
                             onClick={() => handleWishlistToggle(element._id)}
-                            style={{ color: isWishlisted(element._id) ? "#ef4444" : "#94a3b8" }}
+                            title={isWishlisted(element._id) ? "Remove from saved jobs" : "Save this job"}
                           >
-                            {isWishlisted(element._id) ? (
-                              <FaBookmark style={{ fontSize: "1.2rem" }} />
-                            ) : (
-                              <FaRegBookmark style={{ fontSize: "1.2rem" }} />
-                            )}
+                            {isWishlisted(element._id) ? <FaBookmark /> : <FaRegBookmark />}
                           </button>
                         )}
-                        <Link to={`/job/${element._id}`} className="view-role-btn">
-                          View Role
+                        <Link to={`/job/${element._id}`} className="job-v3-view-btn">
+                          <span>View Role</span>
+                          <FiArrowRight />
                         </Link>
                       </div>
                     </div>
 
-                    {/* Middle description */}
-                    <div className="job-card-v2-desc">
+                    {/* Description Excerpt */}
+                    <div className="job-card-v3-desc">
                       {element.description.length > 180
                         ? `${element.description.substring(0, 180)}...`
                         : element.description}
                     </div>
 
-                    {/* Skill Pill tags */}
-                    <div className="job-card-v2-tags">
-                      {skills.slice(0, 4).map((skill, index) => (
-                        <span className="job-tag" key={index}>
+                    {/* Skill Tags */}
+                    <div className="job-card-v3-tags">
+                      {skills.slice(0, 5).map((skill, index) => (
+                        <span className="job-v3-tag" key={index}>
                           {skill}
                         </span>
                       ))}
-                      {skills.length > 4 && (
-                        <span className="job-tag-more">+{skills.length - 4} more</span>
+                      {skills.length > 5 && (
+                        <span className="job-v3-tag-more">+{skills.length - 5} more</span>
                       )}
                     </div>
 
-                    {/* Vacancies + Applied count badges */}
-                    <div className="job-card-v2-vacancies">
-                      <span className="job-vacancy-badge">
-                        <FiLayers />
-                        {element.vacancies ?? 1} {(element.vacancies ?? 1) === 1 ? "Vacancy" : "Vacancies"}
-                      </span>
-                      <span className="job-applied-badge">
-                        <FiUsers />
-                        {element.appliedCount ?? 0} Applied
-                      </span>
-                    </div>
-
-                    {/* Footer Meta bar */}
-                    <div className="job-card-v2-bottom">
-                      <div className="job-meta-left">
-                        <div className="job-meta-item">
+                    {/* Card Footer: Metadata badges + posted freshness */}
+                    <div className="job-card-v3-bottom">
+                      <div className="job-v3-meta-pills">
+                        <div className="job-v3-pill salary">
                           <FaRupeeSign /> {formatSalary(element)}
                         </div>
-                        <div className="job-meta-item">
-                          <FiMapPin /> {jobType}
+                        <div className="job-v3-pill jobtype">
+                          <FiBriefcase /> {jobType}
                         </div>
-                        <div className="job-meta-item">
-                          <FiBriefcase /> {experience}
+                        <div className="job-v3-pill exp">
+                          <FiAward /> {experience}
+                        </div>
+                        <div className="job-v3-pill vacancies">
+                          <FiLayers /> {element.vacancies ?? 1}{" "}
+                          {(element.vacancies ?? 1) === 1 ? "Opening" : "Openings"}
+                        </div>
+                        <div className="job-v3-pill applied">
+                          <FiUsers /> {element.appliedCount ?? 0} Applied
                         </div>
                       </div>
-                      <div className="job-meta-posted">
+
+                      <div className="job-v3-meta-posted">
                         <FiClock /> {`Posted: ${new Date(element.jobPostedOn).toLocaleDateString()}`}
                       </div>
                     </div>
@@ -504,17 +867,17 @@ const Jobs = () => {
                 );
               })
             ) : (
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "60px",
-                  background: "#fff",
-                  borderRadius: "16px",
-                  border: "1px solid #e2e8f0",
-                  color: "#64748b",
-                }}
-              >
-                No jobs match your filter criteria. Try resetting or adjusting the options.
+              <div className="jobs-v3-empty-state">
+                <div className="jobs-v3-empty-icon">
+                  <FiSearch />
+                </div>
+                <h3>No jobs match your search criteria</h3>
+                <p>
+                  We couldn't find any positions matching your selected filters. Try broadening your keywords or reset all filters.
+                </p>
+                <button className="jobs-v3-empty-btn" onClick={resetFilters}>
+                  Clear All Filters
+                </button>
               </div>
             )}
           </main>
@@ -528,29 +891,62 @@ const Jobs = () => {
             {/* Modal Header */}
             <div className="ai-modal-header">
               <div className="ai-modal-title-group">
-                <div className="ai-sparkle-icon">✦</div>
+                <div className="ai-sparkle-icon">
+                  <FiZap />
+                </div>
                 <div>
-                  <h2 className="ai-modal-title">AI Job Match</h2>
-                  {aiProfileName && (
-                    <p className="ai-modal-subtitle">
-                      Personalized for <strong>{aiProfileName}</strong>
-                      {aiTotalAnalyzed > 0 && ` · Analyzed ${aiTotalAnalyzed} jobs`}
-                    </p>
-                  )}
+                  <div className="ai-modal-badge-row">
+                    <h2 className="ai-modal-title">AI Career Match Engine</h2>
+                    <span className="ai-modal-badge-live">Live Intelligence</span>
+                  </div>
+                  <p className="ai-modal-subtitle">
+                    {aiProfileName ? (
+                      <>Personalized recommendations for <strong>{aiProfileName}</strong></>
+                    ) : (
+                      "Smart role recommendations matched to your tech stack"
+                    )}
+                    {aiTotalAnalyzed > 0 && ` · ${aiTotalAnalyzed} jobs evaluated`}
+                  </p>
                 </div>
               </div>
-              <button className="ai-modal-close" onClick={closeAiModal}>
-                <FiX />
-              </button>
+              <div className="ai-modal-header-actions">
+                {aiRecommendations.length > 0 && (
+                  <span className="ai-header-count-pill">
+                    ✦ {aiRecommendations.length} Matches Found
+                  </span>
+                )}
+                <button className="ai-modal-close" onClick={closeAiModal} aria-label="Close modal">
+                  <FiX />
+                </button>
+              </div>
             </div>
 
             {/* Modal Body */}
             <div className="ai-modal-body">
+              {/* Candidate Profile Skills Bar */}
+              {!aiLoading && !aiError && aiCandidateSkills.length > 0 && (
+                <div className="ai-skills-context-strip">
+                  <div className="ai-skills-strip-left">
+                    <span className="ai-skills-strip-label">🎯 Matched Against Your Skills:</span>
+                    <div className="ai-skills-strip-tags">
+                      {aiCandidateSkills.map((sk, i) => (
+                        <span key={i} className="ai-skills-strip-tag">
+                          <FiCheck style={{ fontSize: "0.72rem", marginRight: "3px" }} />
+                          {sk}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <Link to="/jobseeker/profile" onClick={closeAiModal} className="ai-skills-strip-link">
+                    Update Skills →
+                  </Link>
+                </div>
+              )}
               {/* Loading State */}
               {aiLoading && (
                 <div className="ai-loading-state">
                   <div className="ai-loading-simple-icon">
-                    <FiZap style={{ fontSize: "2rem", color: "#0ea5e9" }} />
+                    <FiZap style={{ fontSize: "2rem", color: "#2563eb" }} />
                   </div>
                   <p className="ai-loading-text">AI is analyzing your profile...</p>
                   <p className="ai-loading-sub">Matching your skills &amp; experience against all active jobs</p>
@@ -570,51 +966,37 @@ const Jobs = () => {
 
               {/* ── No Skills Warning State ────────────────────────────────── */}
               {!aiLoading && !aiError && aiNoSkills && (
-                <div className="ai-empty-state" style={{ padding: "2.5rem 1.5rem" }}>
-                  <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🧠</div>
-                  <h3 style={{ margin: "0 0 0.5rem", color: "#1e293b", fontSize: "1.1rem", fontWeight: 700 }}>
+                <div className="ai-empty-state-card">
+                  <div className="ai-empty-state-icon">🧠</div>
+                  <h3 className="ai-empty-state-title">
                     No skills found in your profile
                   </h3>
-                  <p style={{ margin: "0 0 1.5rem", color: "#64748b", fontSize: "0.9rem", lineHeight: 1.6 }}>
+                  <p className="ai-empty-state-desc">
                     The AI match engine reads your <strong>Key Skills</strong> and <strong>IT Skills</strong> from
-                    your profile to find relevant jobs. Add at least one skill to get personalized recommendations.
+                    your profile to match you with top engineering teams. Add your core skills to get precision matches.
                   </p>
-                  <div style={{
-                    background: "#fff7ed", border: "1.5px solid #fed7aa", borderRadius: "10px",
-                    padding: "1rem 1.25rem", marginBottom: "1.5rem", textAlign: "left",
-                  }}>
-                    <p style={{ margin: "0 0 0.5rem", fontWeight: 700, color: "#92400e", fontSize: "0.85rem" }}>
-                      📋 How to add your skills:
+                  <div className="ai-skills-guide-box">
+                    <p className="ai-guide-title">
+                      📋 How to activate your AI match:
                     </p>
-                    <ol style={{ margin: 0, paddingLeft: "1.2rem", color: "#78350f", fontSize: "0.84rem", lineHeight: 1.8 }}>
-                      <li>Go to your <strong>Profile</strong></li>
-                      <li>Open the <strong>"Key Skills"</strong> section and add your skills</li>
-                      <li>Optionally add <strong>IT / Technical Skills</strong> for better matches</li>
-                      <li>Come back here and click <strong>"AI Match Recommendations"</strong> again</li>
+                    <ol className="ai-guide-list">
+                      <li>Go to your <strong>Job Seeker Profile</strong></li>
+                      <li>Open <strong>"Key Skills"</strong> and add your primary competencies</li>
+                      <li>Optionally add <strong>IT / Technical Skills</strong> for deeper matching</li>
+                      <li>Return here to view tailored recommendations</li>
                     </ol>
                   </div>
-                  <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
+                  <div className="ai-empty-actions">
                     <Link
                       to="/jobseeker/profile"
                       onClick={closeAiModal}
-                      style={{
-                        display: "inline-flex", alignItems: "center", gap: "0.4rem",
-                        background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-                        color: "#fff", fontWeight: 600, fontSize: "0.9rem",
-                        padding: "0.65rem 1.4rem", borderRadius: "50px",
-                        textDecoration: "none",
-                        boxShadow: "0 4px 12px rgba(99,102,241,0.3)",
-                      }}
+                      className="ai-primary-action-btn"
                     >
-                      ✏️ Go to My Profile
+                      ✏️ Complete My Profile Skills
                     </Link>
                     <button
                       onClick={closeAiModal}
-                      style={{
-                        background: "#f1f5f9", color: "#475569", fontWeight: 600,
-                        fontSize: "0.9rem", padding: "0.65rem 1.4rem",
-                        borderRadius: "50px", border: "none", cursor: "pointer",
-                      }}
+                      className="ai-secondary-action-btn"
                     >
                       Close
                     </button>
@@ -624,53 +1006,26 @@ const Jobs = () => {
 
               {/* ── Empty Results State (has skills but no matching jobs) ──── */}
               {!aiLoading && !aiError && !aiNoSkills && aiRecommendations.length === 0 && (
-                <div className="ai-empty-state" style={{ padding: "2.5rem 1.5rem" }}>
-                  <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</div>
-                  <h3 style={{ margin: "0 0 0.5rem", color: "#1e293b", fontSize: "1.1rem", fontWeight: 700 }}>
-                    No matching jobs found
+                <div className="ai-empty-state-card">
+                  <div className="ai-empty-state-icon">🔍</div>
+                  <h3 className="ai-empty-state-title">
+                    No direct matches found right now
                   </h3>
-                  {aiCandidateSkills.length > 0 && (
-                    <div style={{
-                      background: "#f0fdf4", border: "1.5px solid #bbf7d0", borderRadius: "10px",
-                      padding: "0.75rem 1rem", margin: "0.75rem 0 1rem",
-                    }}>
-                      <p style={{ margin: "0 0 0.5rem", color: "#166534", fontSize: "0.8rem", fontWeight: 700 }}>Your skills used for matching:</p>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
-                        {aiCandidateSkills.slice(0, 8).map((sk, i) => (
-                          <span key={i} style={{
-                            background: "#dcfce7", color: "#166534", fontSize: "0.75rem",
-                            fontWeight: 600, padding: "0.2rem 0.6rem", borderRadius: "50px",
-                          }}>{sk}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  <p style={{ margin: "0 0 1.25rem", color: "#64748b", fontSize: "0.88rem", lineHeight: 1.6 }}>
-                    We couldn't find active jobs that match your current skill set.
-                    Try adding more skills to your profile or check back later as new jobs are posted.
+                  <p className="ai-empty-state-desc">
+                    We couldn't find active positions that strictly match your specific profile skills.
+                    Try adding related skills or broaden your profile attributes.
                   </p>
-                  <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
+                  <div className="ai-empty-actions">
                     <Link
                       to="/jobseeker/profile"
                       onClick={closeAiModal}
-                      style={{
-                        display: "inline-flex", alignItems: "center", gap: "0.4rem",
-                        background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-                        color: "#fff", fontWeight: 600, fontSize: "0.9rem",
-                        padding: "0.65rem 1.4rem", borderRadius: "50px",
-                        textDecoration: "none",
-                        boxShadow: "0 4px 12px rgba(99,102,241,0.3)",
-                      }}
+                      className="ai-primary-action-btn"
                     >
-                      ✏️ Update My Skills
+                      ✏️ Update Profile Skills
                     </Link>
                     <button
                       onClick={closeAiModal}
-                      style={{
-                        background: "#f1f5f9", color: "#475569", fontWeight: 600,
-                        fontSize: "0.9rem", padding: "0.65rem 1.4rem",
-                        borderRadius: "50px", border: "none", cursor: "pointer",
-                      }}
+                      className="ai-secondary-action-btn"
                     >
                       Browse All Jobs
                     </button>
@@ -678,142 +1033,134 @@ const Jobs = () => {
                 </div>
               )}
 
-              {/* Recommendations List */}
+              {/* Top AI Match Status Banner */}
               {!aiLoading && !aiError && aiRecommendations.length > 0 && (
-                <>
-                  {/* Skills used for matching — always visible */}
-                  {aiCandidateSkills.length > 0 && (
-                    <div style={{
-                      background: "linear-gradient(135deg, #f0fdf4, #dcfce7)",
-                      border: "1.5px solid #bbf7d0",
-                      borderRadius: "10px",
-                      padding: "0.75rem 1rem",
-                      marginBottom: "1rem",
-                    }}>
-                      <p style={{ margin: "0 0 0.5rem", color: "#166534", fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.4px" }}>
-                        🎯 Skills used for matching
-                      </p>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
-                        {aiCandidateSkills.map((sk, i) => (
-                          <span key={i} style={{
-                            background: "#fff", color: "#15803d", fontSize: "0.75rem",
-                            fontWeight: 600, padding: "0.2rem 0.65rem",
-                            borderRadius: "50px", border: "1.5px solid #86efac",
-                          }}>{sk}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  <p className="ai-results-info">
-                    <FiZap style={{ color: "#0ea5e9" }} />
-                    Found <strong>{aiRecommendations.length}</strong> personalized job matches ranked by AI
-                  </p>
-                  <div className="ai-recommendations-list">
-                    {aiRecommendations.map((rec, index) => {
-                      const matchColor = getMatchColor(rec.matchScore);
-                      const matchLabel = getMatchLabel(rec.matchScore);
-                      const compName = rec.job?.companyName ||
-                        rec.job?.postedBy?.companyName ||
-                        rec.job?.postedBy?.name ||
-                        "Verified Employer";
-                      
-                      // Employer's exact required skills for this job (same-to-same)
-                      const employerRequiredSkills = (rec.job?.skills && Array.isArray(rec.job.skills) && rec.job.skills.length > 0)
-                        ? rec.job.skills
-                        : (typeof rec.job?.skills === "string" && rec.job.skills.trim())
-                        ? rec.job.skills.split(",").map((s) => s.trim()).filter(Boolean)
-                        : deriveSkills(rec.job?.category, rec.job?.title);
-                      
-                      let reasonText = rec.reason || "";
-                      reasonText = reasonText.replace(/Software Development, Location Alignment/gi, employerRequiredSkills.slice(0, 2).join(", "));
-                      reasonText = reasonText.replace(/Software Development/gi, employerRequiredSkills[0] || "core skills");
-                      reasonText = reasonText.replace(/Location Alignment/gi, employerRequiredSkills[1] || "technical requirements");
+                <div className="ai-results-found-bar">
+                  <span className="ai-found-sparkle">✦</span>
+                  <span>
+                    Found <strong className="ai-found-num">{aiRecommendations.length}</strong> personalized job matches ranked by AI
+                  </span>
+                </div>
+              )}
 
-                      const employerLogoUrl = rec.job?.postedBy?.profilePicture?.url || rec.job?.profilePicture?.url;
-                      const initial = (compName || rec.job?.category || "J").trim().charAt(0).toUpperCase();
+              {/* Recommendations Cards */}
+              {!aiLoading && !aiError && aiRecommendations.length > 0 && (
+                <div className="ai-recommendations-list">
+                  {aiRecommendations.map((rec, index) => {
+                    const matchLabel = getMatchLabel(rec.matchScore);
+                    const compName = rec.job?.companyName ||
+                      rec.job?.postedBy?.companyName ||
+                      rec.job?.postedBy?.name ||
+                      "Verified Employer";
+                    
+                    const employerRequiredSkills = (rec.job?.skills && Array.isArray(rec.job.skills) && rec.job.skills.length > 0)
+                      ? rec.job.skills
+                      : (typeof rec.job?.skills === "string" && rec.job.skills.trim())
+                      ? rec.job.skills.split(",").map((s) => s.trim()).filter(Boolean)
+                      : deriveSkills(rec.job?.category, rec.job?.title);
+                    
+                    let reasonText = rec.reason || "";
+                    reasonText = reasonText.replace(/Software Development, Location Alignment/gi, employerRequiredSkills.slice(0, 2).join(", "));
+                    reasonText = reasonText.replace(/Software Development/gi, employerRequiredSkills[0] || "core skills");
+                    reasonText = reasonText.replace(/Location Alignment/gi, employerRequiredSkills[1] || "technical requirements");
 
-                      return (
-                        <div className="ai-rec-card" key={rec.job._id}>
-                          {/* Card Top Meta Bar (Rank + Match Score Pill) */}
-                          <div className="ai-rec-topbar">
-                            <div className="ai-rank-badge">
-                              <FaStar style={{ fontSize: "0.65rem" }} /> #{index + 1} Best Match
-                            </div>
-                            <div className="ai-match-pill" style={{ background: `${matchColor}15`, color: matchColor, borderColor: `${matchColor}35` }}>
-                              <span className="ai-match-pill-num">{rec.matchScore}%</span>
-                              <span className="ai-match-pill-text">Match</span>
-                            </div>
+                    const employerLogoUrl = rec.job?.postedBy?.profilePicture?.url || rec.job?.profilePicture?.url;
+                    const initial = (compName || rec.job?.category || "J").trim().charAt(0).toUpperCase();
+
+                    return (
+                      <div className="ai-clean-job-card" key={rec.job._id}>
+                        {/* 1. Card Top Header: Rank on Left, Match % on Right */}
+                        <div className="ai-clean-card-header">
+                          <div className="ai-clean-rank-pill">
+                            <span className="ai-clean-rank-star">✦</span>
+                            <span>#{index + 1} Best Match</span>
                           </div>
-
-                          {/* Card Header (Logo + Title & Company) */}
-                          <div className="ai-rec-card-header">
-                            {getEmployerId(rec.job) ? (
-                              <Link to={`/company/view/${getEmployerId(rec.job)}`} onClick={closeAiModal} title={`View ${compName}'s profile`} style={{ textDecoration: "none" }}>
-                                <div className="ai-rec-company-logo" style={{ background: getCompanyColor(rec.job.category || "Job"), overflow: "hidden", cursor: "pointer" }}>
-                                  {employerLogoUrl ? (
-                                    <img
-                                      src={employerLogoUrl}
-                                      alt={compName}
-                                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                                    />
-                                  ) : (
-                                    initial
-                                  )}
-                                </div>
-                              </Link>
-                            ) : (
-                              <div className="ai-rec-company-logo" style={{ background: getCompanyColor(rec.job.category || "Job"), overflow: "hidden" }}>
-                                {employerLogoUrl ? (
-                                  <img
-                                    src={employerLogoUrl}
-                                    alt={compName}
-                                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                                  />
-                                ) : (
-                                  initial
-                                )}
-                              </div>
-                            )}
-                            <div className="ai-rec-card-info">
-                              <h3 className="ai-rec-job-title">{rec.job.title}</h3>
-                              <p className="ai-rec-company">{compName} · {rec.job.city}, {rec.job.country}</p>
-                            </div>
-                          </div>
-
-                          {/* Match Quality Badge */}
-                          <div className="ai-match-badge" style={{ background: `${matchColor}15`, color: matchColor, borderColor: `${matchColor}35` }}>
-                            <FaStar style={{ fontSize: "0.65rem" }} /> {matchLabel}
-                          </div>
-
-                          {/* AI Reason */}
-                          <p className="ai-rec-reason">{reasonText}</p>
-
-                          {/* Employer Required Skills (Same to Same as Job Card) */}
-                          {employerRequiredSkills && employerRequiredSkills.length > 0 && (
-                            <div className="ai-rec-highlights">
-                              {employerRequiredSkills.slice(0, 4).map((skill, i) => (
-                                <span className="ai-highlight-tag" key={i}>{skill}</span>
-                              ))}
-                              {employerRequiredSkills.length > 4 && (
-                                <span className="ai-highlight-tag">+{employerRequiredSkills.length - 4} more</span>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Salary + Action Footer */}
-                          <div className="ai-rec-footer">
-                            <span className="ai-rec-salary">
-                              {formatSalary(rec.job)}
-                            </span>
-                            <Link to={`/job/${rec.job._id}`} className="ai-view-role-btn" onClick={closeAiModal}>
-                              View Role →
-                            </Link>
+                          <div
+                            className={`ai-clean-match-pill ${
+                              rec.matchScore >= 85 ? "excellent" : rec.matchScore >= 70 ? "strong" : "good"
+                            }`}
+                          >
+                            {rec.matchScore}% MATCH
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                </>
+
+                        {/* 2. Identity Row: Logo + Job Title + Company Name & Location */}
+                        <div className="ai-clean-identity-row">
+                          <div
+                            className="ai-clean-logo-box"
+                            style={employerLogoUrl ? { backgroundColor: "#ffffff" } : { backgroundColor: getCompanyColor(rec.job.category || "Job") }}
+                          >
+                            {employerLogoUrl ? (
+                              <img src={employerLogoUrl} alt={compName} className="ai-clean-logo-img" />
+                            ) : (
+                              initial
+                            )}
+                          </div>
+                          <div className="ai-clean-title-group">
+                            <h3 className="ai-clean-job-title">
+                              <Link to={`/job/${rec.job._id}`} onClick={closeAiModal}>
+                                {rec.job.title}
+                              </Link>
+                            </h3>
+                            <div className="ai-clean-meta-line">
+                              <span className="ai-clean-comp-name">{compName}</span>
+                              <span className="ai-clean-dot">·</span>
+                              <span className="ai-clean-location">
+                                {rec.job.city}, {rec.job.country}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 3. Verdict Pill: ★ Excellent Match / ★ Strong Match */}
+                        <div className="ai-clean-verdict-row">
+                          <span
+                            className={`ai-clean-verdict-pill ${
+                              rec.matchScore >= 85 ? "excellent" : rec.matchScore >= 70 ? "strong" : "good"
+                            }`}
+                          >
+                            ★ {matchLabel}
+                          </span>
+                        </div>
+
+                        {/* 4. AI Match Rationale Paragraph */}
+                        <p className="ai-clean-rationale-text">
+                          {reasonText}
+                        </p>
+
+                        {/* 5. Skills Pill Tags */}
+                        {employerRequiredSkills && employerRequiredSkills.length > 0 && (
+                          <div className="ai-clean-skills-row">
+                            {employerRequiredSkills.slice(0, 5).map((skill, i) => (
+                              <span className="ai-clean-skill-pill" key={i}>
+                                {skill}
+                              </span>
+                            ))}
+                            {employerRequiredSkills.length > 5 && (
+                              <span className="ai-clean-skill-pill more">
+                                +{employerRequiredSkills.length - 5}
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        {/* 6. Bottom Row: Salary on Left, View Role Button on Right */}
+                        <div className="ai-clean-bottom-row">
+                          <div className="ai-clean-salary">
+                            {formatSalary(rec.job)}
+                          </div>
+                          <Link
+                            to={`/job/${rec.job._id}`}
+                            className="ai-clean-view-btn"
+                            onClick={closeAiModal}
+                          >
+                            View Role →
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
           </div>
