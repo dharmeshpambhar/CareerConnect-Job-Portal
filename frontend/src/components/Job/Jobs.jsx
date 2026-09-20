@@ -53,6 +53,103 @@ const Jobs = () => {
     });
   }, []);
 
+  // Synchronize incoming searchParams from Home search bar or category clicks
+  useEffect(() => {
+    const qParam = (searchParams.get("q") || "").trim();
+    const locParam = (searchParams.get("loc") || searchParams.get("city") || searchParams.get("location") || "").trim();
+    const catParam = (searchParams.get("category") || searchParams.get("cat") || "").trim();
+    const typeParam = (searchParams.get("type") || searchParams.get("jobType") || "").trim();
+
+    const knownCities = [
+      "Ahmedabad", "Bangalore", "Bengaluru", "Chennai", "Delhi", "Hyderabad",
+      "Kolkata", "Mumbai", "Noida", "Pune", "Gurgaon", "Surat", "Vadodara", "Rajkot", "India"
+    ];
+
+    const knownCategories = [
+      "Frontend Web Development", "MERN Stack Development", "MEAN Stack Development",
+      "Mobile App Development", "Graphics & Design", "Artificial Intelligence",
+      "Account & Finance", "Video Animation", "Business Development Executive", "Data Entry Operator"
+    ];
+
+    // 1. Location parameter
+    if (locParam) {
+      const allLocs = Array.from(new Set([
+        ...knownCities,
+        ...jobs.map((j) => j.city).filter(Boolean),
+        ...jobs.map((j) => j.country).filter(Boolean),
+      ]));
+      const match = allLocs.find(
+        (l) => l.toLowerCase() === locParam.toLowerCase() || l.toLowerCase().includes(locParam.toLowerCase()) || locParam.toLowerCase().includes(l.toLowerCase())
+      );
+      if (match) {
+        setSelectedLocation(match);
+      } else {
+        setSelectedLocation(locParam.charAt(0).toUpperCase() + locParam.slice(1));
+      }
+    }
+
+    // 2. Category parameter
+    if (catParam) {
+      const allCats = Array.from(new Set([
+        ...knownCategories,
+        ...jobs.map((j) => j.category).filter(Boolean),
+      ]));
+      const match = allCats.find(
+        (c) => c.toLowerCase() === catParam.toLowerCase() || c.toLowerCase().includes(catParam.toLowerCase()) || catParam.toLowerCase().includes(c.toLowerCase())
+      );
+      if (match) {
+        setSelectedCategory(match);
+      } else {
+        setSelectedCategory(catParam);
+      }
+    }
+
+    // 3. Job type parameter
+    if (typeParam) {
+      const types = ["Full-Time", "Part-Time", "Contract", "Internship", "Freelance", "Remote", "Hybrid", "Onsite"];
+      const match = types.find((t) => t.toLowerCase() === typeParam.toLowerCase());
+      if (match) setSelectedJobType(match);
+    }
+
+    // 4. Query parameter (q) - smart detection if user typed a city or category into the main search box!
+    if (qParam) {
+      const qLower = qParam.toLowerCase();
+
+      const allLocs = Array.from(new Set([
+        ...knownCities,
+        ...jobs.map((j) => j.city).filter(Boolean),
+        ...jobs.map((j) => j.country).filter(Boolean),
+      ]));
+      const matchedCity = allLocs.find(
+        (l) => l.toLowerCase() === qLower || l.toLowerCase().includes(qLower) || qLower.includes(l.toLowerCase())
+      );
+
+      const allCats = Array.from(new Set([
+        ...knownCategories,
+        ...jobs.map((j) => j.category).filter(Boolean),
+      ]));
+      const matchedCat = allCats.find(
+        (c) => c.toLowerCase() === qLower || c.toLowerCase().includes(qLower) || qLower.includes(c.toLowerCase())
+      );
+
+      const types = ["Full-Time", "Part-Time", "Contract", "Internship", "Freelance", "Remote", "Hybrid", "Onsite"];
+      const matchedType = types.find((t) => t.toLowerCase() === qLower);
+
+      if (matchedCity && (!locParam || locParam === "All")) {
+        setSelectedLocation(matchedCity);
+        setSearchQuery("");
+      } else if (matchedCat && (!catParam || catParam === "All")) {
+        setSelectedCategory(matchedCat);
+        setSearchQuery("");
+      } else if (matchedType && (!typeParam || typeParam === "All")) {
+        setSelectedJobType(matchedType);
+        setSearchQuery("");
+      } else {
+        setSearchQuery(qParam);
+      }
+    }
+  }, [searchParams, jobs]);
+
   // Load saved job IDs from the wishlist collection
   useEffect(() => {
     if (isAuthorized && user?.role === "Job Seeker") {
@@ -267,12 +364,39 @@ const Jobs = () => {
     "Data Entry Operator",
   ];
   const uniqueCategories = Array.from(
-    new Set([...jobs.map((job) => job.category).filter(Boolean), ...standardCategories])
+    new Set([
+      ...jobs.map((job) => job.category).filter(Boolean),
+      ...standardCategories,
+      ...(selectedCategory !== "All" ? [selectedCategory] : []),
+    ])
   ).sort();
 
   // Unique locations (both countries and cities)
+  const standardCities = [
+    "Ahmedabad",
+    "Bangalore",
+    "Bengaluru",
+    "Chennai",
+    "Delhi",
+    "Hyderabad",
+    "Kolkata",
+    "Mumbai",
+    "Noida",
+    "Pune",
+    "Gurgaon",
+    "Surat",
+    "Vadodara",
+    "Rajkot",
+    "India",
+  ];
   const uniqueCountries = Array.from(new Set(jobs.map((job) => job.country).filter(Boolean))).sort();
-  const uniqueCities = Array.from(new Set(jobs.map((job) => job.city).filter(Boolean))).sort();
+  const uniqueCities = Array.from(
+    new Set([
+      ...standardCities,
+      ...jobs.map((job) => job.city).filter(Boolean),
+      ...(selectedLocation !== "All" ? [selectedLocation] : []),
+    ])
+  ).sort();
   const uniqueLocations = Array.from(new Set([...uniqueCountries, ...uniqueCities])).sort();
 
   // Unique experience options
@@ -512,24 +636,103 @@ const Jobs = () => {
           </div>
         </div>
 
-        {/* Quick Filter Pills Row */}
-        <div className="jobs-quick-pills-wrap">
-          <span className="jobs-quick-label">Popular:</span>
-          <div className="jobs-quick-pills-list">
-            {QUICK_FILTERS.map((qf) => {
-              const active = isQuickActive(qf);
-              return (
+        {/* Applied Filters Row - Only shown when filters are active */}
+        {activeFilterCount > 0 && (
+          <div className="jobs-quick-pills-wrap">
+            <span className="jobs-quick-label">
+              <FiFilter style={{ color: "#2563eb" }} /> Applied Filters:
+            </span>
+            <div className="jobs-quick-pills-list">
+              {searchQuery.trim() && (
                 <button
-                  key={qf.id}
-                  className={`jobs-quick-pill ${active ? "active" : ""}`}
-                  onClick={() => handleQuickFilter(qf)}
+                  className="jobs-applied-pill"
+                  onClick={() => setSearchQuery("")}
+                  title="Remove keyword filter"
                 >
-                  {qf.label}
+                  <span className="pill-type">Keyword:</span> "{searchQuery}"
+                  <FiX className="pill-remove-icon" />
                 </button>
-              );
-            })}
+              )}
+              {selectedCategory !== "All" && (
+                <button
+                  className="jobs-applied-pill"
+                  onClick={() => setSelectedCategory("All")}
+                  title="Remove category filter"
+                >
+                  <span className="pill-type">Category:</span> {selectedCategory}
+                  <FiX className="pill-remove-icon" />
+                </button>
+              )}
+              {selectedLocation !== "All" && (
+                <button
+                  className="jobs-applied-pill"
+                  onClick={() => setSelectedLocation("All")}
+                  title="Remove location filter"
+                >
+                  <span className="pill-type">City:</span> {selectedLocation}
+                  <FiX className="pill-remove-icon" />
+                </button>
+              )}
+              {selectedJobType !== "All" && (
+                <button
+                  className="jobs-applied-pill"
+                  onClick={() => setSelectedJobType("All")}
+                  title="Remove job type filter"
+                >
+                  <span className="pill-type">Type:</span> {selectedJobType}
+                  <FiX className="pill-remove-icon" />
+                </button>
+              )}
+              {selectedExperience !== "All" && (
+                <button
+                  className="jobs-applied-pill"
+                  onClick={() => setSelectedExperience("All")}
+                  title="Remove experience filter"
+                >
+                  <span className="pill-type">Exp:</span> {selectedExperience}
+                  <FiX className="pill-remove-icon" />
+                </button>
+              )}
+              {selectedSalary !== "All" && (
+                <button
+                  className="jobs-applied-pill"
+                  onClick={() => setSelectedSalary("All")}
+                  title="Remove salary filter"
+                >
+                  <span className="pill-type">Salary:</span> {selectedSalary}
+                  <FiX className="pill-remove-icon" />
+                </button>
+              )}
+              {selectedDatePosted !== "All" && (
+                <button
+                  className="jobs-applied-pill"
+                  onClick={() => setSelectedDatePosted("All")}
+                  title="Remove date filter"
+                >
+                  <span className="pill-type">Date:</span> {selectedDatePosted}
+                  <FiX className="pill-remove-icon" />
+                </button>
+              )}
+              {selectedSort !== "Latest" && (
+                <button
+                  className="jobs-applied-pill"
+                  onClick={() => setSelectedSort("Latest")}
+                  title="Reset sort order"
+                >
+                  <span className="pill-type">Sort:</span> {selectedSort}
+                  <FiX className="pill-remove-icon" />
+                </button>
+              )}
+              <button
+                className="jobs-applied-clear-all"
+                onClick={resetFilters}
+                title="Clear all filters"
+              >
+                <FiX /> Clear All ({activeFilterCount})
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Main Grid: Sidebar + Job Cards */}
         <div className="jobs-v3-grid">

@@ -97,7 +97,7 @@ const PopularCategories = () => {
           <div
             className={`card cat-card ${element.colorClass}`}
             key={element.id}
-            onClick={() => navigate(`/job/getall?q=${encodeURIComponent(element.query)}`)}
+            onClick={() => navigate(`/job/getall?category=${encodeURIComponent(element.title)}`)}
             role="button"
             tabIndex={0}
           >

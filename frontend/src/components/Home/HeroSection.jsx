@@ -69,8 +69,21 @@ const HeroSection = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     const params = new URLSearchParams();
-    if (jobQuery.trim()) params.set("q", jobQuery.trim());
-    if (locationQuery.trim()) params.set("loc", locationQuery.trim());
+    const jobText = jobQuery.trim();
+    const locText = locationQuery.trim();
+
+    const knownCities = [
+      "ahmedabad", "bangalore", "bengaluru", "chennai", "delhi",
+      "hyderabad", "kolkata", "mumbai", "noida", "pune", "gurgaon",
+      "india", "gujarat", "surat", "vadodara", "rajkot"
+    ];
+
+    if (jobText && knownCities.includes(jobText.toLowerCase()) && !locText) {
+      params.set("loc", jobText);
+    } else {
+      if (jobText) params.set("q", jobText);
+      if (locText) params.set("loc", locText);
+    }
     navigate(`/job/getall?${params.toString()}`);
   };
 

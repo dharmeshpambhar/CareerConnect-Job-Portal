@@ -5922,6 +5922,74 @@ nav .hamburger {
   box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
 }
 
+.jobs-applied-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  border-radius: 100px;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);
+}
+
+.jobs-applied-pill:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+.jobs-applied-pill .pill-type {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.jobs-applied-pill .pill-remove-icon {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  transition: all 0.15s ease;
+}
+
+.jobs-applied-pill:hover .pill-remove-icon {
+  color: #dc2626;
+  transform: scale(1.2);
+}
+
+.jobs-applied-clear-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  color: #64748b;
+  border-radius: 100px;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.jobs-applied-clear-all:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.jobs-applied-empty {
+  color: #94a3b8;
+  font-size: 0.84rem;
+  font-style: italic;
+  padding: 4px 6px;
+}
+
 /* ── Main Grid Container ─────────────────────────────────────────────────── */
 .jobs-v3-grid {
   display: flex;
