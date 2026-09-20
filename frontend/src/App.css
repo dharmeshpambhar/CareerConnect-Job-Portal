@@ -8256,7 +8256,336 @@ nav .hamburger {
 .appDash-seeker-actions {
   display: flex;
   align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.appDash-action-btn--fraud {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1.5px solid #fde68a;
+  font-weight: 600;
+}
+
+.appDash-action-btn--fraud:hover {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fcd34d;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(217, 119, 6, 0.15);
+}
+
+.appDash-fraud-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1.5px solid #fecaca;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   Report Fraud & Dispute Modal (Feature 1)
+   ═════════════════════════════════════════════════════════════════ */
+.report-fraud-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  animation: rf-fadeIn 0.2s ease-out;
+}
+
+@keyframes rf-fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.report-fraud-modal-box {
+  background: #ffffff;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 620px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 60px -12px rgba(15, 23, 42, 0.35);
+  border: 1px solid #e2e8f0;
+  padding: 28px 32px;
+  position: relative;
+  animation: rf-slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes rf-slideUp {
+  from { transform: translateY(20px) scale(0.97); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.report-fraud-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+}
+
+.report-fraud-modal-title-group {
+  display: flex;
+  align-items: flex-start;
   gap: 12px;
+}
+
+.report-fraud-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #fee2e2;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.report-fraud-modal-title-group h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px;
+}
+
+.report-fraud-modal-title-group p {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.report-fraud-close-btn {
+  background: #f1f5f9;
+  border: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 1.1rem;
+}
+
+.report-fraud-close-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* Candidate Safety Advisory Notice */
+.report-fraud-advisory {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+  color: #92400e;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.report-fraud-advisory-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #d97706;
+}
+
+/* Form Fields */
+.report-fraud-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.report-fraud-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.report-fraud-label {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.report-fraud-label .req {
+  color: #ef4444;
+}
+
+.report-fraud-select {
+  padding: 10px 14px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  color: #1e293b;
+  background: #f8fafc;
+  outline: none;
+  transition: border-color 0.2s;
+  cursor: pointer;
+}
+
+.report-fraud-select:focus {
+  border-color: #6366f1;
+  background: #ffffff;
+}
+
+.report-fraud-textarea {
+  padding: 12px 14px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  color: #1e293b;
+  background: #f8fafc;
+  resize: vertical;
+  outline: none;
+  font-family: inherit;
+  line-height: 1.5;
+  transition: border-color 0.2s;
+}
+
+.report-fraud-textarea:focus {
+  border-color: #6366f1;
+  background: #ffffff;
+}
+
+.report-fraud-hint {
+  font-size: 0.74rem;
+  color: #64748b;
+}
+
+/* File Drop Zone */
+.report-fraud-file-drop {
+  border: 2px dashed #cbd5e1;
+  border-radius: 10px;
+  padding: 16px;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.report-fraud-file-drop:hover {
+  border-color: #6366f1;
+  background: #f5f3ff;
+}
+
+.report-fraud-file-input {
+  display: none;
+}
+
+.report-fraud-file-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: #475569;
+}
+
+.report-fraud-upload-icon {
+  font-size: 1.8rem;
+  color: #6366f1;
+}
+
+.report-fraud-filename {
+  color: #059669;
+  font-weight: 600;
+}
+
+.report-fraud-remove-file {
+  background: transparent;
+  border: none;
+  color: #dc2626;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Modal Actions */
+.report-fraud-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 14px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.report-fraud-btn-cancel {
+  padding: 9px 20px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+  border-radius: 9px;
+  font-weight: 600;
+  font-size: 0.86rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.report-fraud-btn-cancel:hover:not(:disabled) {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.report-fraud-btn-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 22px;
+  border: none;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  border-radius: 9px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.report-fraud-btn-submit:hover:not(:disabled) {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.45);
+  transform: translateY(-1px);
+}
+
+.report-fraud-btn-submit:disabled,
+.report-fraud-btn-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
 }
 
 /* Responsive */

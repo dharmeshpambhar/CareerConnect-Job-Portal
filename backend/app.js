@@ -7,6 +7,7 @@ import applicationRouter from "./routes/applicationRoutes.js";
 import adminRouter from "./routes/adminRoutes.js";
 import wishlistRouter from "./routes/wishlistRoutes.js";
 import aiRouter from "./routes/aiRoutes.js";
+import fraudRouter from "./routes/fraudRoutes.js";
 import { ensureAdminExists } from "./controllers/adminAuthController.js";
 import { config } from "dotenv";
 import cors from "cors";
@@ -55,6 +56,7 @@ app.use("/api/v1/application", applicationRouter);
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/wishlist", wishlistRouter);
 app.use("/api/v1/ai", aiRouter);
+app.use("/api/v1/fraud", fraudRouter);
 
 // ── ONE-TIME MIGRATION: Remove redundant `company` nested object from employers ──
 // Visit http://localhost:4000/api/v1/migrate/remove-employer-company once, then remove this route.

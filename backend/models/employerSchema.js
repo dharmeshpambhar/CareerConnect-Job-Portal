@@ -59,6 +59,23 @@ const employerSchema = new mongoose.Schema(
       newJobs:             { type: Boolean, default: true },
       applicationUpdates:  { type: Boolean, default: true },
     },
+    isBlacklisted: {
+      type: Boolean,
+      default: false,
+    },
+    blacklistReason: {
+      type: String,
+      default: "",
+    },
+    warningCount: {
+      type: Number,
+      default: 0,
+    },
+    accountStatus: {
+      type: String,
+      enum: ["Active", "Warned", "Frozen", "Blacklisted"],
+      default: "Active",
+    },
   },
   { timestamps: true, collection: "employers" }
 );

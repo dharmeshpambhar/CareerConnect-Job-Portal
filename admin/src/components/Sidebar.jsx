@@ -6,7 +6,7 @@ import {
   RxFileText, 
   RxExit 
 } from "react-icons/rx";
-import { FaBriefcase } from "react-icons/fa";
+import { FaBriefcase, FaShieldAlt } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { Context } from "../main";
@@ -68,6 +68,12 @@ const Sidebar = () => {
             <NavLink to="/applications" className="sidebar-link">
               <RxFileText />
               <span>Applications</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/fraud-reports" className="sidebar-link">
+              <FaShieldAlt />
+              <span>Fraud & Disputes</span>
             </NavLink>
           </li>
         </ul>

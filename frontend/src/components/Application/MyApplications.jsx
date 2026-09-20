@@ -15,7 +15,9 @@ import {
   HiOutlineXCircle,
   HiOutlineBriefcase,
   HiOutlineUser,
+  HiOutlineShieldExclamation,
 } from "react-icons/hi";
+import ReportFraudModal from "./ReportFraudModal";
 import { FiCheck, FiX, FiUserCheck } from "react-icons/fi";
 import {
   fetchApplications,
@@ -32,6 +34,7 @@ const MyApplications = () => {
   const [wishlist, setWishlist] = useState([]);
   const [updatingId, setUpdatingId] = useState(null);
   const [selectedCandidateApp, setSelectedCandidateApp] = useState(null);
+  const [reportingApplication, setReportingApplication] = useState(null);
 
   const { isAuthorized, user, isLoading } = useContext(Context);
   const navigateTo = useNavigate();
@@ -378,6 +381,26 @@ const MyApplications = () => {
                       /* Job Seeker Actions */
                       <div className="appDash-seeker-actions">
                         {renderStatusBadge(element.status)}
+
+                        {/* Fraud Dispute reporting */}
+                        {element.fraudReport?.isReported ? (
+                          <div
+                            className="appDash-fraud-badge"
+                            title={`Dispute Reason: ${element.fraudReport.reason}`}
+                          >
+                            <HiOutlineShieldExclamation />
+                            <span>Dispute: {element.fraudReport.status || "Under Review"}</span>
+                          </div>
+                        ) : (
+                          <button
+                            className="appDash-action-btn appDash-action-btn--fraud"
+                            onClick={() => setReportingApplication(element)}
+                            title="Report fraud, fake offer, or demanding fees"
+                          >
+                            <HiOutlineShieldExclamation /> Report Fraud
+                          </button>
+                        )}
+
                         <button
                           className="appDash-action-btn appDash-action-btn--delete"
                           onClick={() =>
@@ -412,6 +435,29 @@ const MyApplications = () => {
           onStatusChange={handleStatusChange}
           updatingId={updatingId}
           openResumeModal={openModal}
+        />
+      )}
+
+      {reportingApplication && (
+        <ReportFraudModal
+          application={reportingApplication}
+          onClose={() => setReportingApplication(null)}
+          onSuccess={(report) => {
+            setApplications((prev) =>
+              prev.map((app) =>
+                app._id === reportingApplication._id
+                  ? {
+                      ...app,
+                      fraudReport: {
+                        isReported: true,
+                        status: "Pending Investigation",
+                        reason: report.reason,
+                      },
+                    }
+                  : app
+              )
+            );
+          }}
         />
       )}
     </section>

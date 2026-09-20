@@ -8,6 +8,7 @@ import Dashboard from "./components/Dashboard";
 import Accounts from "./components/Accounts";
 import Jobs from "./components/Jobs";
 import Applications from "./components/Applications";
+import FraudReports from "./components/FraudReports";
 import Login from "./components/Login";
 import "./App.css";
 
@@ -97,6 +98,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <Applications />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/fraud-reports" 
+                element={
+                  <ProtectedRoute>
+                    <FraudReports />
                   </ProtectedRoute>
                 } 
               />

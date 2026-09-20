@@ -451,4 +451,37 @@ export const fetchAiMatchRecommendations = async () => {
   }
 };
 
+// ─── Fraud & Dispute Redressal ──────────────────────────────────────────────
+
+export const submitFraudReport = async (formData) => {
+  try {
+    const { data } = await axios.post(
+      `${API_URL}/fraud/report`,
+      formData,
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
+    return { success: true, message: data.message, report: data.report };
+  } catch (error) {
+    console.error("submitFraudReport error:", error);
+    const msg = error.response?.data?.message || "Failed to submit fraud report.";
+    return { success: false, message: msg };
+  }
+};
+
+export const fetchMyFraudReports = async () => {
+  try {
+    const { data } = await axios.get(
+      `${API_URL}/fraud/my-reports`,
+      { withCredentials: true }
+    );
+    return { success: true, reports: data.reports || [] };
+  } catch (error) {
+    console.error("fetchMyFraudReports error:", error);
+    return { success: false, reports: [] };
+  }
+};
+
 

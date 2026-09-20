@@ -68,6 +68,13 @@ const applicationSchema = new mongoose.Schema({
     enum: ["Pending", "Accepted", "Rejected"],
     default: "Pending",
   },
+  fraudReport: {
+    isReported: { type: Boolean, default: false },
+    reportId: { type: mongoose.Schema.Types.ObjectId, ref: "FraudReport" },
+    reason: { type: String, default: "" },
+    status: { type: String, default: "" },
+    reportedAt: { type: Date },
+  },
   createdAt: {
     type: Date,
     default: Date.now,

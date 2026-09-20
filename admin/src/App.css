@@ -1674,3 +1674,237 @@ select.form-input {
   box-shadow: 0 0 0 3px var(--secondary-glow);
 }
 
+/* ═════════════════════════════════════════════════════════════════
+   Admin Fraud & Dispute Moderation Panel (Feature 4)
+   Matches Dashboard, Accounts, Jobs, and Applications Design
+   ═════════════════════════════════════════════════════════════════ */
+
+.stat-card.red::before {
+  background: var(--danger-color);
+}
+
+.stat-card.red:hover .stat-icon {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: var(--danger-color);
+}
+
+/* Dispute Status Badges (Light Glassmorphic Theme) */
+.badge.pending {
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.badge.warned {
+  background: rgba(249, 115, 22, 0.1);
+  color: #ea580c;
+  border: 1px solid rgba(249, 115, 22, 0.2);
+}
+
+.badge.blacklisted {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.badge.review {
+  background: rgba(99, 102, 241, 0.1);
+  color: #4f46e5;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.badge.dismissed {
+  background: rgba(100, 116, 139, 0.1);
+  color: #64748b;
+  border: 1px solid rgba(100, 116, 139, 0.2);
+}
+
+.fraud-category-tag {
+  display: inline-block;
+  background: rgba(239, 68, 68, 0.06);
+  color: #b91c1c;
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+/* Inspection Modal Details */
+.fraud-modal-category {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #b45309;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.fraud-modal-statement {
+  background: rgba(15, 23, 42, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text-main);
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.fraud-modal-evidence-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btn-evidence-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--primary-accent);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 0.84rem;
+  font-weight: 600;
+  width: fit-content;
+  transition: all 0.2s ease;
+}
+
+.btn-evidence-link:hover {
+  background: var(--primary-accent);
+  color: #fff;
+}
+
+.evidence-modal-thumb {
+  max-width: 280px;
+  max-height: 160px;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.evidence-modal-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-case-notes {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.88rem;
+  outline: none;
+  resize: vertical;
+  transition: all 0.2s ease;
+}
+
+.admin-case-notes:focus {
+  border-color: var(--input-focus-border);
+  box-shadow: var(--input-focus-shadow);
+  background: #fff;
+}
+
+.fraud-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 1rem;
+  margin-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-modal-subtle {
+  padding: 0.6rem 1rem;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-modal-subtle:hover:not(:disabled) {
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--text-main);
+}
+
+.btn-modal-review {
+  padding: 0.6rem 1.1rem;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  color: var(--primary-accent);
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-modal-review:hover:not(:disabled) {
+  background: var(--primary-accent);
+  color: #fff;
+}
+
+.btn-modal-warn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.6rem 1.2rem;
+  background: rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(249, 115, 22, 0.25);
+  color: #ea580c;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-modal-warn:hover:not(:disabled) {
+  background: #ea580c;
+  color: #fff;
+}
+
+.btn-modal-blacklist {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.6rem 1.2rem;
+  background: #ef4444;
+  border: none;
+  color: #ffffff;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+.btn-modal-blacklist:hover:not(:disabled) {
+  background: #dc2626;
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.35);
+  transform: translateY(-1px);
+}
+
