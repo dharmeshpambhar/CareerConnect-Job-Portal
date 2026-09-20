@@ -33,6 +33,11 @@ const Login = () => {
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(true);
 
+  // Validation Errors
+  const [loginErrors, setLoginErrors] = useState({});
+  const [regErrors, setRegErrors] = useState({});
+  const [forgotErrors, setForgotErrors] = useState({});
+
   // Forgot Password Modal States
   const [forgotModalOpen, setForgotModalOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
@@ -60,8 +65,21 @@ const Login = () => {
     return { score: 3, text: "Strong", color: "#10b981", width: "100%" };
   }, [regPassword]);
 
+  // ── Validation Helpers ──────────────────────────────────────────────────────
+  const isValidEmail = (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
+  const isValidPhone = (val) => /^[0-9]{10}$/.test(val.trim());
+  const isValidName  = (val) => /^[A-Za-z\s.'-]{2,}$/.test(val.trim());
+
+  // ── Login Submit ─────────────────────────────────────────────────────────────
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
+    const errs = {};
+    if (!loginEmail.trim()) errs.email = "Email is required.";
+    else if (!isValidEmail(loginEmail)) errs.email = "Enter a valid email address.";
+    if (!loginPassword) errs.password = "Password is required.";
+    else if (loginPassword.length < 6) errs.password = "Password must be at least 6 characters.";
+    if (Object.keys(errs).length) { setLoginErrors(errs); return; }
+    setLoginErrors({});
     setLoading(true);
     try {
       const { data } = await axios.post(
@@ -84,16 +102,21 @@ const Login = () => {
     }
   };
 
+  // ── Register Submit ───────────────────────────────────────────────────────────
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    if (!agreeTerms) {
-      toast.error("Please agree to the Terms of Service & Privacy Policy.");
-      return;
-    }
-    if (regPassword.length < 6) {
-      toast.error("Password must be at least 6 characters long.");
-      return;
-    }
+    const errs = {};
+    if (!regName.trim()) errs.name = "Full name is required.";
+    else if (!isValidName(regName)) errs.name = "Name must contain only letters, spaces, or dots (min 2 chars).";
+    if (!regEmail.trim()) errs.email = "Email address is required.";
+    else if (!isValidEmail(regEmail)) errs.email = "Enter a valid email address.";
+    if (!regPhone.trim()) errs.phone = "Phone number is required.";
+    else if (!isValidPhone(regPhone)) errs.phone = "Phone must be exactly 10 digits (numbers only).";
+    if (!regPassword) errs.password = "Password is required.";
+    else if (regPassword.length < 6) errs.password = "Password must be at least 6 characters.";
+    if (!agreeTerms) errs.terms = "You must agree to the Terms of Service & Privacy Policy.";
+    if (Object.keys(errs).length) { setRegErrors(errs); return; }
+    setRegErrors({});
     setLoading(true);
     try {
       const { data } = await axios.post(
@@ -118,16 +141,18 @@ const Login = () => {
     }
   };
 
+  // ── Forgot Password Submit ────────────────────────────────────────────────────
   const handleResetSubmit = async (e) => {
     e.preventDefault();
-    if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match!");
-      return;
-    }
-    if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters long!");
-      return;
-    }
+    const errs = {};
+    if (!forgotEmail.trim()) errs.email = "Email is required.";
+    else if (!isValidEmail(forgotEmail)) errs.email = "Enter a valid email address.";
+    if (!newPassword) errs.newPassword = "New password is required.";
+    else if (newPassword.length < 6) errs.newPassword = "Password must be at least 6 characters.";
+    if (!confirmPassword) errs.confirmPassword = "Please confirm your password.";
+    else if (newPassword !== confirmPassword) errs.confirmPassword = "Passwords do not match!";
+    if (Object.keys(errs).length) { setForgotErrors(errs); return; }
+    setForgotErrors({});
     setForgotLoading(true);
     const res = await resetPasswordApi({
       email: forgotEmail,
@@ -253,18 +278,18 @@ const Login = () => {
                     <label className="auth-field-label" htmlFor="login-email">
                       Work / Personal Email
                     </label>
-                    <div className="auth-input-wrapper">
+                    <div className={`auth-input-wrapper ${loginErrors.email ? "auth-input-error" : ""}`}>
                       <MdOutlineMailOutline className="auth-input-icon" />
                       <input
                         id="login-email"
                         type="email"
                         placeholder="you@gmail.com"
                         value={loginEmail}
-                        onChange={(e) => setLoginEmail(e.target.value)}
-                        required={isLoginMode}
+                        onChange={(e) => { setLoginEmail(e.target.value); setLoginErrors((p) => ({ ...p, email: "" })); }}
                         className="auth-input-control"
                       />
                     </div>
+                    {loginErrors.email && <p className="auth-field-error">{loginErrors.email}</p>}
                   </div>
 
                   {/* Password Input */}
@@ -285,15 +310,14 @@ const Login = () => {
                         Forgot password?
                       </button>
                     </div>
-                    <div className="auth-input-wrapper">
+                    <div className={`auth-input-wrapper ${loginErrors.password ? "auth-input-error" : ""}`}>
                       <AiOutlineLock className="auth-input-icon" />
                       <input
                         id="login-password"
                         type={showLoginPassword ? "text" : "password"}
                         placeholder="••••••••••••"
                         value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                        required={isLoginMode}
+                        onChange={(e) => { setLoginPassword(e.target.value); setLoginErrors((p) => ({ ...p, password: "" })); }}
                         className="auth-input-control"
                       />
                       <button
@@ -305,6 +329,7 @@ const Login = () => {
                         {showLoginPassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
                       </button>
                     </div>
+                    {loginErrors.password && <p className="auth-field-error">{loginErrors.password}</p>}
                   </div>
 
                   {/* Remember Me Checkbox */}
@@ -391,18 +416,24 @@ const Login = () => {
                     <label className="auth-field-label" htmlFor="reg-name">
                       Full Name / Company Name
                     </label>
-                    <div className="auth-input-wrapper">
+                    <div className={`auth-input-wrapper ${regErrors.name ? "auth-input-error" : ""}`}>
                       <FaRegUser className="auth-input-icon" />
                       <input
                         id="reg-name"
                         type="text"
                         placeholder={regRole === "Job Seeker" ? "e.g. Dharmesh Pambhar" : "e.g. Acme Corporation"}
                         value={regName}
-                        onChange={(e) => setRegName(e.target.value)}
-                        required={!isLoginMode}
+                        onChange={(e) => {
+                          // Block digits and special characters from name field
+                          const val = e.target.value;
+                          if (/[^A-Za-z\s.'\-]/.test(val)) return;
+                          setRegName(val);
+                          setRegErrors((p) => ({ ...p, name: "" }));
+                        }}
                         className="auth-input-control"
                       />
                     </div>
+                    {regErrors.name && <p className="auth-field-error">{regErrors.name}</p>}
                   </div>
 
                   {/* Email & Phone Split Row */}
@@ -411,36 +442,48 @@ const Login = () => {
                       <label className="auth-field-label" htmlFor="reg-email">
                         Email Address
                       </label>
-                      <div className="auth-input-wrapper">
+                      <div className={`auth-input-wrapper ${regErrors.email ? "auth-input-error" : ""}`}>
                         <MdOutlineMailOutline className="auth-input-icon" />
                         <input
                           id="reg-email"
                           type="email"
                           placeholder="name@gmail.com"
                           value={regEmail}
-                          onChange={(e) => setRegEmail(e.target.value)}
-                          required={!isLoginMode}
+                          onChange={(e) => { setRegEmail(e.target.value); setRegErrors((p) => ({ ...p, email: "" })); }}
                           className="auth-input-control"
                         />
                       </div>
+                      {regErrors.email && <p className="auth-field-error">{regErrors.email}</p>}
                     </div>
 
                     <div className="auth-field-group">
                       <label className="auth-field-label" htmlFor="reg-phone">
                         Phone Number
                       </label>
-                      <div className="auth-input-wrapper">
+                      <div className={`auth-input-wrapper ${regErrors.phone ? "auth-input-error" : ""}`}>
                         <FaPhoneFlip className="auth-input-icon" />
                         <input
                           id="reg-phone"
                           type="tel"
                           placeholder="10-digit phone"
                           value={regPhone}
-                          onChange={(e) => setRegPhone(e.target.value)}
-                          required={!isLoginMode}
+                          maxLength={10}
+                          onKeyDown={(e) => {
+                            // Allow: backspace, delete, tab, escape, arrow keys, home, end
+                            const allowed = ["Backspace","Delete","Tab","Escape","ArrowLeft","ArrowRight","Home","End"];
+                            if (allowed.includes(e.key)) return;
+                            // Block anything that is not a digit
+                            if (!/^[0-9]$/.test(e.key)) e.preventDefault();
+                          }}
+                          onChange={(e) => {
+                            const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                            setRegPhone(digits);
+                            setRegErrors((p) => ({ ...p, phone: "" }));
+                          }}
                           className="auth-input-control"
                         />
                       </div>
+                      {regErrors.phone && <p className="auth-field-error">{regErrors.phone}</p>}
                     </div>
                   </div>
 
@@ -449,15 +492,14 @@ const Login = () => {
                     <label className="auth-field-label" htmlFor="reg-password">
                       Create Password
                     </label>
-                    <div className="auth-input-wrapper">
+                    <div className={`auth-input-wrapper ${regErrors.password ? "auth-input-error" : ""}`}>
                       <AiOutlineLock className="auth-input-icon" />
                       <input
                         id="reg-password"
                         type={showRegPassword ? "text" : "password"}
                         placeholder="At least 6 characters"
                         value={regPassword}
-                        onChange={(e) => setRegPassword(e.target.value)}
-                        required={!isLoginMode}
+                        onChange={(e) => { setRegPassword(e.target.value); setRegErrors((p) => ({ ...p, password: "" })); }}
                         className="auth-input-control"
                       />
                       <button
@@ -469,6 +511,7 @@ const Login = () => {
                         {showRegPassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
                       </button>
                     </div>
+                    {regErrors.password && <p className="auth-field-error">{regErrors.password}</p>}
 
                     {/* Password Strength Indicator */}
                     {regPassword.length > 0 && (
@@ -493,20 +536,20 @@ const Login = () => {
                   </div>
 
                   {/* Terms & Conditions Checkbox */}
-                  <div className="auth-options-row">
+                  <div className="auth-options-row" style={{ flexDirection: "column", alignItems: "flex-start", gap: "4px" }}>
                     <label className="auth-checkbox-label">
                       <input
                         type="checkbox"
                         checked={agreeTerms}
-                        onChange={(e) => setAgreeTerms(e.target.checked)}
+                        onChange={(e) => { setAgreeTerms(e.target.checked); setRegErrors((p) => ({ ...p, terms: "" })); }}
                         className="auth-custom-checkbox"
-                        required
                       />
                       <span>
                         I agree to the <span className="auth-link-highlight">Terms of Service</span> and{" "}
                         <span className="auth-link-highlight">Privacy Policy</span>
                       </span>
                     </label>
+                    {regErrors.terms && <p className="auth-field-error" style={{ marginTop: 0 }}>{regErrors.terms}</p>}
                   </div>
 
                   {/* Submit Button */}
@@ -592,30 +635,29 @@ const Login = () => {
               {/* Registered Email */}
               <div className="auth-field-group">
                 <label className="auth-field-label">Registered Email</label>
-                <div className="auth-input-wrapper">
+                <div className={`auth-input-wrapper ${forgotErrors.email ? "auth-input-error" : ""}`}>
                   <MdOutlineMailOutline className="auth-input-icon" />
                   <input
                     type="email"
                     placeholder="Enter your registered email"
                     value={forgotEmail}
-                    onChange={(e) => setForgotEmail(e.target.value)}
-                    required
+                    onChange={(e) => { setForgotEmail(e.target.value); setForgotErrors((p) => ({ ...p, email: "" })); }}
                     className="auth-input-control"
                   />
                 </div>
+                {forgotErrors.email && <p className="auth-field-error">{forgotErrors.email}</p>}
               </div>
 
               {/* New Password */}
               <div className="auth-field-group">
                 <label className="auth-field-label">New Password</label>
-                <div className="auth-input-wrapper">
+                <div className={`auth-input-wrapper ${forgotErrors.newPassword ? "auth-input-error" : ""}`}>
                   <AiOutlineLock className="auth-input-icon" />
                   <input
                     type={showForgotPass ? "text" : "password"}
                     placeholder="New password (min 6 characters)"
                     value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
+                    onChange={(e) => { setNewPassword(e.target.value); setForgotErrors((p) => ({ ...p, newPassword: "" })); }}
                     className="auth-input-control"
                   />
                   <button
@@ -626,22 +668,23 @@ const Login = () => {
                     {showForgotPass ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
                   </button>
                 </div>
+                {forgotErrors.newPassword && <p className="auth-field-error">{forgotErrors.newPassword}</p>}
               </div>
 
               {/* Confirm New Password */}
               <div className="auth-field-group">
                 <label className="auth-field-label">Confirm New Password</label>
-                <div className="auth-input-wrapper">
+                <div className={`auth-input-wrapper ${forgotErrors.confirmPassword ? "auth-input-error" : ""}`}>
                   <AiOutlineLock className="auth-input-icon" />
                   <input
                     type={showForgotPass ? "text" : "password"}
                     placeholder="Confirm new password"
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
+                    onChange={(e) => { setConfirmPassword(e.target.value); setForgotErrors((p) => ({ ...p, confirmPassword: "" })); }}
                     className="auth-input-control"
                   />
                 </div>
+                {forgotErrors.confirmPassword && <p className="auth-field-error">{forgotErrors.confirmPassword}</p>}
               </div>
 
               <div className="auth-modal-action-bar">

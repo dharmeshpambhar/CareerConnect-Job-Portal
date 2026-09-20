@@ -17,6 +17,7 @@ import {
   FiCheck,
   FiX,
   FiLayers,
+  FiAlertTriangle,
 } from "react-icons/fi";
 import { FaRupeeSign } from "react-icons/fa";
 import { HiOutlineCheckCircle, HiOutlineClock } from "react-icons/hi";
@@ -41,6 +42,11 @@ const MyJobs = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
 
+  // Double verification modal state for closing a job
+  const [closingJob, setClosingJob] = useState(null);
+  const [isClosingAction, setIsClosingAction] = useState(false);
+  const [pendingEditClose, setPendingEditClose] = useState(null);
+
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); // 'all' | 'active' | 'expired'
@@ -53,8 +59,41 @@ const MyJobs = () => {
   useEffect(() => {
     if (isAuthorized && user?.role === "Employer") {
       fetchMyJobs().then(({ myJobs: data, offline }) => {
-        setMyJobs(data || []);
-        if (offline) toast("Offline demo mode active.", { icon: "📡" });
+        if (offline && (!data || data.length === 0)) {
+          const demoJobs = [
+            {
+              _id: "demo_job_1",
+              title: "Senior Full Stack Engineer",
+              category: "MERN Stack Development",
+              country: "India",
+              city: "Bangalore",
+              location: "Indiranagar, Metro Station Road",
+              description: "Seeking an experienced Full Stack developer with strong React, Node.js, and database design skills to build scalable enterprise web applications.",
+              fixedSalary: 1400000,
+              vacancies: 2,
+              expired: false,
+              jobPostedOn: new Date().toISOString(),
+            },
+            {
+              _id: "demo_job_2",
+              title: "Lead UI/UX & Frontend Developer",
+              category: "Frontend Web Development",
+              country: "India",
+              city: "Mumbai",
+              location: "BKC Tech Hub",
+              description: "Looking for an expert Frontend engineer passionate about clean animations, responsive user interfaces, and state management.",
+              salaryFrom: 900000,
+              salaryTo: 1600000,
+              vacancies: 1,
+              expired: false,
+              jobPostedOn: new Date().toISOString(),
+            },
+          ];
+          setMyJobs(demoJobs);
+          toast("Demo mode active with sample jobs.", { icon: "💼" });
+        } else {
+          setMyJobs(data || []);
+        }
       });
     }
   }, [isAuthorized, user]);
@@ -163,6 +202,15 @@ const MyJobs = () => {
       payload.fixedSalary = undefined;
     }
 
+    // If employer is closing an active job via edit form, prompt double verification
+    const originalJob = myJobs.find((j) => j._id === jobId);
+    const wasActive = originalJob && (!originalJob.expired || originalJob.expired === "false");
+    if (wasActive && payload.expired) {
+      setClosingJob({ ...originalJob, ...payload });
+      setPendingEditClose({ jobId, payload });
+      return;
+    }
+
     setIsUpdating(true);
     try {
       const { message, offline } = await updateJob(jobId, payload);
@@ -205,17 +253,65 @@ const MyJobs = () => {
     }
   };
 
-  // Quick toggle active / expired status
-  const handleToggleStatus = async (job) => {
-    const newExpired = !(job.expired && job.expired !== "false");
+  // Initiate status toggle: Double verification if closing, direct if re-activating
+  const handleInitiateStatusToggle = (job) => {
+    const isJobExpired = Boolean(job.expired && job.expired !== "false");
+    if (!isJobExpired) {
+      // Active Job -> Employer wants to CLOSE job -> Trigger Double Verification Modal!
+      setClosingJob(job);
+      setPendingEditClose(null);
+    } else {
+      // Expired Job -> Re-activate directly
+      handleReactivateJob(job);
+    }
+  };
+
+  // Re-activate an expired job
+  const handleReactivateJob = async (job) => {
     try {
-      const { message } = await updateJob(job._id, { ...job, expired: newExpired });
-      toast.success(`Job marked as ${newExpired ? "Expired" : "Active"}`);
+      const { message, offline } = await updateJob(job._id, { ...job, expired: false });
       setMyJobs((prev) =>
-        prev.map((j) => (j._id === job._id ? { ...j, expired: newExpired } : j))
+        prev.map((j) => (j._id === job._id ? { ...j, expired: false } : j))
       );
+      toast.success(`Job "${job.title}" re-activated successfully! ✓`);
     } catch (err) {
-      toast.error("Failed to update status.");
+      toast.error("Failed to re-activate job.");
+    }
+  };
+
+  // Double verification confirmed: Close the job
+  const handleConfirmCloseJob = async () => {
+    if (!closingJob) return;
+
+    setIsClosingAction(true);
+    try {
+      if (pendingEditClose) {
+        // Saved via in-card edit mode with Expired selected
+        const { jobId, payload } = pendingEditClose;
+        const { message, offline } = await updateJob(jobId, payload);
+        setMyJobs((prev) =>
+          prev.map((j) => (j._id === jobId ? { ...j, ...payload } : j))
+        );
+        setEditingJobId(null);
+        setEditFormData({});
+        toast.success(message || `Job "${closingJob.title}" closed successfully.`);
+        setPendingEditClose(null);
+      } else {
+        // Closed directly via "Close Job" action button
+        const { message, offline } = await updateJob(closingJob._id, {
+          ...closingJob,
+          expired: true,
+        });
+        setMyJobs((prev) =>
+          prev.map((j) => (j._id === closingJob._id ? { ...j, expired: true } : j))
+        );
+        toast.success(`Job "${closingJob.title}" has been closed.`);
+      }
+      setClosingJob(null);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to close job.");
+    } finally {
+      setIsClosingAction(false);
     }
   };
 
@@ -599,7 +695,7 @@ const MyJobs = () => {
                   <div className="myjobs-card-actions">
                     <button
                       className="myjobs-action-btn myjobs-toggle-btn"
-                      onClick={() => handleToggleStatus(job)}
+                      onClick={() => handleInitiateStatusToggle(job)}
                       title={isJobExpired ? "Re-activate this job" : "Mark this job as expired"}
                     >
                       {isJobExpired ? "Re-activate Job" : "Close Job"}
@@ -653,6 +749,81 @@ const MyJobs = () => {
                 Reset All Filters
               </button>
             )}
+          </div>
+        )}
+
+        {/* ── Simple Close Job Confirmation Popup (Rectangle Shape) ── */}
+        {closingJob && (
+          <div
+            className="simple-modal-backdrop"
+            onClick={() => {
+              if (!isClosingAction) {
+                setClosingJob(null);
+                setPendingEditClose(null);
+              }
+            }}
+          >
+            <div
+              className="simple-modal-box"
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+            >
+              <div className="simple-modal-header">
+                <h3 className="simple-modal-title">
+                  <FiAlertTriangle className="simple-modal-warn-icon" /> Warning
+                </h3>
+                <button
+                  type="button"
+                  className="simple-modal-x"
+                  onClick={() => {
+                    if (!isClosingAction) {
+                      setClosingJob(null);
+                      setPendingEditClose(null);
+                    }
+                  }}
+                  disabled={isClosingAction}
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="simple-modal-content">
+                <p className="simple-modal-msg">
+                  Are you sure want to close job <strong>"{closingJob.title}"</strong>?
+                </p>
+
+                <div className="simple-modal-note">
+                  <strong>Please note before closing job:</strong>
+                  <p>
+                    Once closed, this job will be marked as expired and candidates will no longer be able to apply. You can re-open it anytime from your dashboard.
+                  </p>
+                </div>
+              </div>
+
+              <div className="simple-modal-footer">
+                <button
+                  type="button"
+                  className="simple-btn simple-btn-cancel"
+                  onClick={() => {
+                    setClosingJob(null);
+                    setPendingEditClose(null);
+                  }}
+                  disabled={isClosingAction}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="simple-btn simple-btn-danger"
+                  onClick={handleConfirmCloseJob}
+                  disabled={isClosingAction}
+                >
+                  {isClosingAction ? "Closing..." : "Yes, Close Job"}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
