@@ -295,76 +295,89 @@ const MyApplications = () => {
                             : element.coverLetter}
                         </p>
                       )}
+
+                      {/* Candidate documents & profile — cleanly positioned under candidate details */}
+                      <div className="appDash-candidate-doc-actions">
+                        {isEmployer && (
+                          <button
+                            className="appDash-doc-btn appDash-doc-btn--profile"
+                            onClick={() => setSelectedCandidateApp(element)}
+                            title="View Candidate Full Profile"
+                          >
+                            <HiOutlineUser /> View Candidate Profile
+                          </button>
+                        )}
+
+                        {element.resume && element.resume.url && (
+                          <button
+                            className="appDash-doc-btn appDash-doc-btn--resume"
+                            onClick={() =>
+                              openModal(
+                                element.resume.url,
+                                `${element.name} - Resume`
+                              )
+                            }
+                            title="View Resume"
+                          >
+                            <HiOutlineEye /> Resume
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Right — status + actions */}
+                  {/* Right — status & highlighted decision action zone */}
                   <div className="appDash-submission-right">
-                    {/* Status badge */}
-                    {renderStatusBadge(element.status)}
-
-                    <div className="appDash-submission-actions">
-                      {/* Employer View Candidate Full Profile */}
-                      {isEmployer && (
-                        <button
-                          className="appDash-action-btn appDash-action-btn--profile"
-                          onClick={() => setSelectedCandidateApp(element)}
-                          title="View Candidate Full Profile"
-                        >
-                          <HiOutlineUser /> View Candidate Profile
-                        </button>
-                      )}
-
-                      {/* Specific Job Application Resume */}
-                      {element.resume && element.resume.url && (
-                        <button
-                          className="appDash-action-btn appDash-action-btn--view"
-                          onClick={() =>
-                            openModal(
-                              element.resume.url,
-                              `${element.name} - Specific Job Application Resume`
-                            )
-                          }
-                          title="View Specific Resume submitted for this job application"
-                        >
-                          <HiOutlineEye /> Specific Resume
-                        </button>
-                      )}
-
-                      {/* ── EMPLOYER: Accept / Reject ── */}
-                      {isEmployer && (
-                        <>
-                          {element.status !== "Accepted" && (
-                            <button
-                              className="appDash-action-btn appDash-action-btn--accept"
-                              onClick={() =>
-                                handleStatusChange(element._id, "Accepted")
-                              }
-                              disabled={updatingId === element._id}
-                              title="Accept Application"
-                            >
-                              <FiCheck />
-                              {updatingId === element._id ? "..." : "Accept"}
-                            </button>
-                          )}
-                          {element.status !== "Rejected" && (
-                            <button
-                              className="appDash-action-btn appDash-action-btn--reject"
-                              onClick={() =>
-                                handleStatusChange(element._id, "Rejected")
-                              }
-                              disabled={updatingId === element._id}
-                              title="Reject Application"
-                            >
-                              <FiX />
-                              {updatingId === element._id ? "..." : "Reject"}
-                            </button>
-                          )}
-                        </>
-                      )}
-
-                      {/* ── JOB SEEKER: Delete ── */}
-                      {!isEmployer && (
+                    {isEmployer ? (
+                      <div className="appDash-decision-zone">
+                        {element.status === "Accepted" ? (
+                          <div className="appDash-decision-confirmed appDash-decision-confirmed--accepted">
+                            <div className="appDash-confirmed-badge">
+                              <HiOutlineCheckCircle className="appDash-confirmed-icon" />
+                              <span className="appDash-confirmed-title">Accepted</span>
+                            </div>
+                          </div>
+                        ) : element.status === "Rejected" ? (
+                          <div className="appDash-decision-confirmed appDash-decision-confirmed--rejected">
+                            <div className="appDash-confirmed-badge">
+                              <HiOutlineXCircle className="appDash-confirmed-icon" />
+                              <span className="appDash-confirmed-title">Rejected</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="appDash-decision-pending-box">
+                            <span className="appDash-decision-prompt">Decision Required</span>
+                            <div className="appDash-decision-buttons">
+                              <button
+                                className="appDash-btn-decision appDash-btn-decision--accept"
+                                onClick={() =>
+                                  handleStatusChange(element._id, "Accepted")
+                                }
+                                disabled={updatingId === element._id}
+                                title="Accept this application"
+                              >
+                                <FiCheck className="appDash-btn-decision-icon" />
+                                <span>{updatingId === element._id ? "Accepting..." : "Accept"}</span>
+                              </button>
+                              <button
+                                className="appDash-btn-decision appDash-btn-decision--reject"
+                                onClick={() =>
+                                  handleStatusChange(element._id, "Rejected")
+                                }
+                                disabled={updatingId === element._id}
+                                title="Reject this application"
+                              >
+                                <FiX className="appDash-btn-decision-icon" />
+                                <span>{updatingId === element._id ? "Rejecting..." : "Reject"}</span>
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      /* Job Seeker Actions */
+                      <div className="appDash-seeker-actions">
+                        {renderStatusBadge(element.status)}
                         <button
                           className="appDash-action-btn appDash-action-btn--delete"
                           onClick={() =>
@@ -374,8 +387,8 @@ const MyApplications = () => {
                         >
                           <HiOutlineTrash /> Withdraw
                         </button>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

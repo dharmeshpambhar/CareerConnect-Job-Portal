@@ -8021,7 +8021,58 @@ nav .hamburger {
 }
 
 
-/* Submission Action Buttons */
+/* Candidate Documents & Profile Action Buttons (Positioned under candidate details) */
+.appDash-candidate-doc-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.appDash-doc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.appDash-doc-btn--profile {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.appDash-doc-btn--profile:hover {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-color: #93c5fd;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.12);
+}
+
+.appDash-doc-btn--resume {
+  background: #f0fdfa;
+  color: #0d9488;
+  border: 1px solid #99f6e4;
+}
+
+.appDash-doc-btn--resume:hover {
+  background: #ccfbf1;
+  color: #0f766e;
+  border-color: #5eead4;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(13, 148, 136, 0.12);
+}
+
+/* Submission Action Buttons & Fallback */
 .appDash-submission-actions {
   display: flex;
   align-items: center;
@@ -8050,17 +8101,6 @@ nav .hamburger {
   transform: none !important;
 }
 
-.appDash-action-btn--view {
-  background: rgba(14, 165, 233, 0.08);
-  color: #0284c7;
-  border: 1px solid rgba(14, 165, 233, 0.18);
-}
-
-.appDash-action-btn--view:hover {
-  background: rgba(14, 165, 233, 0.15);
-  transform: translateY(-1px);
-}
-
 .appDash-action-btn--delete {
   background: rgba(239, 68, 68, 0.06);
   color: #dc2626;
@@ -8072,30 +8112,151 @@ nav .hamburger {
   transform: translateY(-1px);
 }
 
-/* Accept button — green */
-.appDash-action-btn--accept {
-  background: rgba(16, 185, 129, 0.08);
-  color: #059669;
-  border: 1px solid rgba(16, 185, 129, 0.25);
+/* ── Employer Highlighted Decision Zone ── */
+.appDash-decision-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
 }
 
-.appDash-action-btn--accept:hover:not(:disabled) {
-  background: rgba(16, 185, 129, 0.18);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.15);
+.appDash-decision-pending-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  background: #ffffff;
+  padding: 9px 14px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
 
-/* Reject button — red */
-.appDash-action-btn--reject {
-  background: rgba(239, 68, 68, 0.06);
+.appDash-decision-prompt {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+}
+
+.appDash-decision-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Decision Action Buttons — Highly Visible & Prominent */
+.appDash-btn-decision {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 9px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  white-space: nowrap;
+}
+
+.appDash-btn-decision-icon {
+  font-size: 1.05rem;
+  stroke-width: 2.5;
+}
+
+/* Accept Button — Bold Vibrant Emerald */
+.appDash-btn-decision--accept {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.32);
+}
+
+.appDash-btn-decision--accept:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(16, 185, 129, 0.45);
+}
+
+/* Reject Button — Distinct Danger Red */
+.appDash-btn-decision--reject {
+  background: #ffffff;
   color: #dc2626;
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border: 1.5px solid #f87171;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.08);
 }
 
-.appDash-action-btn--reject:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.14);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 10px rgba(239, 68, 68, 0.12);
+.appDash-btn-decision--reject:hover:not(:disabled) {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(220, 38, 38, 0.35);
+}
+
+.appDash-btn-decision:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Confirmed Final Decision Badges (One-Way State Display) */
+.appDash-decision-confirmed {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.appDash-decision-confirmed--accepted .appDash-confirmed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.18) 100%);
+  color: #047857;
+  border: 1.5px solid #6ee7b7;
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.15);
+}
+
+.appDash-decision-confirmed--rejected .appDash-confirmed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.15) 100%);
+  color: #b91c1c;
+  border: 1.5px solid #fca5a5;
+  box-shadow: 0 2px 10px rgba(239, 68, 68, 0.12);
+}
+
+.appDash-confirmed-icon {
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.appDash-confirmed-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.appDash-confirmed-note {
+  font-size: 0.74rem;
+  color: #64748b;
+  font-style: italic;
+}
+
+/* Seeker Actions */
+.appDash-seeker-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 /* Responsive */
@@ -8130,6 +8291,21 @@ nav .hamburger {
   .appDash-submission-right {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .appDash-decision-zone,
+  .appDash-decision-pending-box,
+  .appDash-decision-confirmed {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .appDash-decision-buttons {
+    width: 100%;
+  }
+
+  .appDash-btn-decision {
+    flex: 1;
   }
 
   .appDash-header {
@@ -8496,12 +8672,18 @@ nav .hamburger {
   justify-content: space-between;
   gap: 16px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .wl-card:hover {
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.09);
-  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+}
+
+.wl-card:hover .wl-job-title {
+  color: #2563eb;
 }
 
 /* Left Side */
@@ -8514,9 +8696,9 @@ nav .hamburger {
 }
 
 .wl-job-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
   background: linear-gradient(135deg, #818cf8, #6366f1);
   color: #fff;
   font-size: 1.3rem;
@@ -8525,6 +8707,21 @@ nav .hamburger {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  overflow: hidden;
+  text-decoration: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.wl-job-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 4px;
+}
+
+.wl-company-link:hover {
+  color: #2563eb !important;
+  text-decoration: underline !important;
 }
 
 .wl-job-info {

@@ -443,7 +443,6 @@ const MyJobs = () => {
                   <div className="myjobs-v2-card myjobs-v2-card--editing" key={job._id}>
                     <div className="myjobs-edit-header">
                       <div className="myjobs-edit-title-group">
-                        <span className="myjobs-edit-badge">Editing Mode</span>
                         <h3>Update Job Details</h3>
                       </div>
                       <button className="myjobs-edit-close" onClick={handleCancelEdit} title="Cancel editing">

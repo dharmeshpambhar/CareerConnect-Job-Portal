@@ -234,7 +234,8 @@ export const updateApplicationStatus = async (id, status) => {
     return { message: data.message, application: data.application, offline: false };
   } catch (error) {
     console.error("updateApplicationStatus error:", error);
-    return { message: "Cannot update status in offline mode.", offline: true };
+    const msg = error.response?.data?.message || "Failed to update application status.";
+    return { message: msg, offline: true };
   }
 };
 

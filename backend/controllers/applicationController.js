@@ -502,6 +502,18 @@ export const updateApplicationStatus = catchAsyncErrors(async (req, res, next) =
 
   const previousStatus = application.status;
 
+  // Once an application is Accepted, it cannot be rejected. If Rejected, it cannot be accepted.
+  if (previousStatus === "Accepted" && status === "Rejected") {
+    return next(
+      new ErrorHandler("This application has already been accepted and cannot be rejected.", 400)
+    );
+  }
+  if (previousStatus === "Rejected" && status === "Accepted") {
+    return next(
+      new ErrorHandler("This application has already been rejected and cannot be accepted.", 400)
+    );
+  }
+
   // ── Vacancy management ─────────────────────────────────────────────────────
   // • Accepting (Pending/Rejected → Accepted): fill 1 vacancy (decrement, floor 0)
   // • Un-accepting (Accepted → Pending/Rejected): restore 1 vacancy (increment)

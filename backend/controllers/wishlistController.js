@@ -2,6 +2,8 @@ import { catchAsyncErrors } from "../middlewares/catchAsyncError.js";
 import { Wishlist } from "../models/wishlistSchema.js";
 import { Job } from "../models/jobSchema.js";
 import { User } from "../models/userSchema.js";
+import { Employer } from "../models/employerSchema.js";
+import mongoose from "mongoose";
 import ErrorHandler from "../middlewares/error.js";
 
 // POST /api/v1/wishlist/toggle/:jobId
@@ -62,15 +64,78 @@ export const toggleWishlist = catchAsyncErrors(async (req, res, next) => {
 // GET /api/v1/wishlist
 export const getWishlist = catchAsyncErrors(async (req, res, next) => {
   const items = await Wishlist.find({ user: req.user._id })
-    .populate({
-      path: "job",
-      populate: { path: "postedBy", select: "name company" },
-    })
-    .sort({ addedAt: -1 });
+    .populate("job")
+    .sort({ addedAt: -1 })
+    .lean();
+
+  if (!items || items.length === 0) {
+    return res.status(200).json({ success: true, wishlist: [] });
+  }
+
+  // Enrich jobs with full employer details (companyName, profilePicture from Employer and User collections)
+  const postedByIdsRaw = items
+    .map((item) => item.job?.postedBy?._id || item.job?.postedBy)
+    .filter(Boolean);
+
+  const objIds = [];
+  for (const id of postedByIdsRaw) {
+    try {
+      objIds.push(new mongoose.Types.ObjectId(id.toString()));
+    } catch (e) {}
+  }
+  const queryIds = [...postedByIdsRaw, ...objIds];
+
+  const [users, employers] = await Promise.all([
+    User.find({ _id: { $in: queryIds } }).select("name email company role profilePicture").lean(),
+    Employer.find({ _id: { $in: queryIds } }).select("name email companyName profilePicture").lean(),
+  ]);
+
+  const userMap = new Map();
+  users.forEach((u) => userMap.set(u._id.toString(), u));
+
+  const employerMap = new Map();
+  employers.forEach((e) => employerMap.set(e._id.toString(), e));
+
+  const enrichedItems = items.map((item) => {
+    if (!item.job) return item;
+    const pId = item.job.postedBy?._id
+      ? item.job.postedBy._id.toString()
+      : item.job.postedBy?.toString();
+
+    const emp = pId ? employerMap.get(pId) : null;
+    const usr = pId ? userMap.get(pId) : null;
+
+    const resolvedCompanyName =
+      emp?.companyName && emp.companyName.trim() !== ""
+        ? emp.companyName.trim()
+        : usr?.company?.name && usr.company.name.trim() !== ""
+        ? usr.company.name.trim()
+        : emp?.name && emp.name.trim() !== ""
+        ? `${emp.name.trim()}'s Company`
+        : usr?.name && usr.name.trim() !== ""
+        ? `${usr.name.trim()}'s Company`
+        : item.jobDetails?.companyName || "Verified Employer";
+
+    const resolvedProfilePic = emp?.profilePicture || usr?.profilePicture || null;
+
+    return {
+      ...item,
+      job: {
+        ...item.job,
+        postedBy: {
+          ...(typeof item.job.postedBy === "object" ? item.job.postedBy : {}),
+          _id: pId,
+          name: emp?.name || usr?.name || "Employer",
+          companyName: resolvedCompanyName,
+          profilePicture: resolvedProfilePic,
+        },
+      },
+    };
+  });
 
   res.status(200).json({
     success: true,
-    wishlist: items,
+    wishlist: enrichedItems,
   });
 });
 

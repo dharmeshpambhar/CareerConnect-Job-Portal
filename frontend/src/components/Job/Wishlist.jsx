@@ -1,19 +1,27 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Context } from "../../main";
 import toast from "react-hot-toast";
 import { FaHeart, FaTimes } from "react-icons/fa";
-import { fetchWishlist, toggleWishlist } from "../../apiService";
+import { fetchWishlist, fetchAllJobs, toggleWishlist } from "../../apiService";
 
 const Wishlist = () => {
   const [wishlist, setWishlist] = useState([]);
+  const [jobsMap, setJobsMap] = useState(new Map());
   const { isAuthorized, user, setUser, isLoading } = useContext(Context);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isAuthorized) {
-      fetchWishlist().then(({ wishlist: data }) => {
-        setWishlist(data || []);
-      });
+      Promise.all([fetchWishlist(), fetchAllJobs()]).then(
+        ([{ wishlist: data }, { jobs: allJobs }]) => {
+          setWishlist(data || []);
+          if (allJobs && allJobs.length > 0) {
+            const map = new Map(allJobs.map((j) => [j._id?.toString(), j]));
+            setJobsMap(map);
+          }
+        }
+      );
     }
   }, [isAuthorized]);
 
@@ -72,20 +80,78 @@ const Wishlist = () => {
         ) : (
           <div className="wl-list">
             {wishlist.map((item) => {
-              const job = item.job || {};
+              const rawJob = item.job || {};
+              const catalogJob = jobsMap.get(rawJob._id?.toString()) || {};
+              const job = { ...catalogJob, ...rawJob };
+
+              const comName =
+                job.postedBy?.companyName ||
+                catalogJob.postedBy?.companyName ||
+                job.postedBy?.company?.name ||
+                catalogJob.postedBy?.company?.name ||
+                job.postedBy?.name ||
+                catalogJob.postedBy?.name ||
+                item.jobDetails?.companyName ||
+                "Verified Employer";
+
+              const profilePic =
+                job.postedBy?.profilePicture?.url ||
+                catalogJob.postedBy?.profilePicture?.url ||
+                job.postedBy?.company?.profilePicture?.url ||
+                catalogJob.postedBy?.company?.profilePicture?.url ||
+                null;
+
+              const initial = comName
+                ? comName.charAt(0).toUpperCase()
+                : (job.title ? job.title.charAt(0).toUpperCase() : "C");
+
+              const employerId = job.postedBy?._id || catalogJob.postedBy?._id || null;
+
               return (
-              <div className="wl-card" key={item._id}>
+              <div
+                className="wl-card"
+                key={item._id}
+                onClick={() => navigate(`/job/${job._id}`)}
+                style={{ cursor: "pointer" }}
+                title={`Click anywhere to view ${job.title} details`}
+              >
                 {/* Left: Avatar + Info */}
                 <div className="wl-card-left">
-                  <div className="wl-job-avatar">
-                    {job.title ? job.title.charAt(0).toUpperCase() : "J"}
+                  <div
+                    className="wl-job-avatar"
+                    style={profilePic ? { background: "#ffffff", border: "1px solid #e2e8f0" } : {}}
+                  >
+                    {profilePic ? (
+                      <img
+                        src={profilePic}
+                        alt={comName}
+                        className="wl-job-avatar-img"
+                      />
+                    ) : (
+                      initial
+                    )}
                   </div>
                   <div className="wl-job-info">
-                    <Link to={`/job/${job._id}`} className="wl-job-title">
+                    <h3 className="wl-job-title">
                       {job.title}
-                    </Link>
+                    </h3>
                     <p className="wl-job-meta">
-                      {job.postedBy?.company?.name || "Company"} • {job.city || job.country || "Location"}
+                      {employerId ? (
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/company/view/${employerId}`);
+                          }}
+                          style={{ color: "#2563eb", fontWeight: 600, cursor: "pointer" }}
+                          className="wl-company-link"
+                          title="Click to view company profile"
+                        >
+                          {comName}
+                        </span>
+                      ) : (
+                        <span style={{ fontWeight: 600 }}>{comName}</span>
+                      )}
+                      {" • "}{job.city || job.country || "Location"}
                     </p>
                   </div>
                 </div>
@@ -104,7 +170,10 @@ const Wishlist = () => {
                   </div>
                   <button
                     className="wl-unsave-btn"
-                    onClick={() => handleRemoveFromWishlist(job._id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveFromWishlist(job._id);
+                    }}
                     title="Remove from saved"
                   >
                     <FaTimes className="wl-unsave-icon" />
