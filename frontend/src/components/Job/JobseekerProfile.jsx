@@ -42,6 +42,7 @@ const JobseekerProfile = () => {
   // Persistent Resume state
   const [resumeData, setResumeData] = useState(null);
   const [uploadingResume, setUploadingResume] = useState(false);
+  const [resumeUploadError, setResumeUploadError] = useState("");
 
   // User profile section lists
   const [keySkills, setKeySkills] = useState([]);
@@ -250,6 +251,7 @@ const JobseekerProfile = () => {
 
   // Persistent Resume Upload & Delete Handlers
   const handleResumeUpload = async (e) => {
+    setResumeUploadError("");
     const file = e.target.files[0];
     if (!file) return;
 
@@ -258,12 +260,14 @@ const JobseekerProfile = () => {
     const fileExt = fileName.substring(fileName.lastIndexOf(".")).toLowerCase();
 
     if (!allowedExtensions.includes(fileExt)) {
-      toast.error("Supported formats: PDF, DOC, DOCX, RTF, PNG, JPEG, WEBP up to 5MB");
+      setResumeUploadError("Invalid file type. Supported formats: PDF, Word (DOC/DOCX), RTF, PNG, JPG, WEBP up to 5MB");
+      if (resumeInputRef.current) resumeInputRef.current.value = "";
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Resume file must be smaller than 5MB.");
+      setResumeUploadError("Resume file size must be less than 5MB.");
+      if (resumeInputRef.current) resumeInputRef.current.value = "";
       return;
     }
 
@@ -780,6 +784,18 @@ const JobseekerProfile = () => {
                     </label>
                   </p>
                   <span className="dropzone-formats">Supported Formats: doc, docx, rtf, pdf, png, jpeg up to 5MB</span>
+                </div>
+              )}
+              {resumeUploadError && (
+                <div
+                  style={{
+                    color: "#dc2626",
+                    fontSize: "0.85rem",
+                    fontWeight: "500",
+                    marginTop: "8px",
+                  }}
+                >
+                  {resumeUploadError}
                 </div>
               )}
             </div>

@@ -177,39 +177,43 @@ export const postJob = catchAsyncErrors(async (req, res, next) => {
     postedBy,
   });
 
-  try {
-    // Find all job seekers across Jobseeker and User collections with newJobs alerts enabled
-    const jobSeekersDb = await Jobseeker.find({
-      $or: [
-        { "notificationSettings.newJobs": true },
-        { "notificationSettings.newJobs": { $exists: false } }
-      ]
-    });
-    const legacySeekers = await User.find({
-      role: "Job Seeker",
-      $or: [
-        { "notificationSettings.newJobs": true },
-        { "notificationSettings.newJobs": { $exists: false } }
-      ]
-    });
+  // Dispatch notifications in background so job posting responds immediately!
+  (async () => {
+    try {
+      const [jobSeekersDb, legacySeekers] = await Promise.all([
+        Jobseeker.find({
+          $or: [
+            { "notificationSettings.newJobs": true },
+            { "notificationSettings.newJobs": { $exists: false } }
+          ]
+        }).select("_id").lean(),
+        User.find({
+          role: "Job Seeker",
+          $or: [
+            { "notificationSettings.newJobs": true },
+            { "notificationSettings.newJobs": { $exists: false } }
+          ]
+        }).select("_id").lean()
+      ]);
 
-    const combinedMap = new Map();
-    [...jobSeekersDb, ...legacySeekers].forEach(seeker => {
-      combinedMap.set(seeker._id.toString(), seeker._id);
-    });
+      const combinedMap = new Map();
+      [...jobSeekersDb, ...legacySeekers].forEach(seeker => {
+        combinedMap.set(seeker._id.toString(), seeker._id);
+      });
 
-    const notifications = Array.from(combinedMap.values()).map((seekerId) => ({
-      recipient: seekerId,
-      title: "New Job Alert!",
-      message: `A new job "${title}" has been posted in "${category}" by ${req.user.name}.`,
-    }));
+      const notifications = Array.from(combinedMap.values()).map((seekerId) => ({
+        recipient: seekerId,
+        title: "New Job Alert!",
+        message: `A new job "${title}" has been posted in "${category}" by ${req.user.name}.`,
+      }));
 
-    if (notifications.length > 0) {
-      await Notification.insertMany(notifications);
+      if (notifications.length > 0) {
+        await Notification.insertMany(notifications);
+      }
+    } catch (err) {
+      console.error("Failed to create notifications for new job (background):", err);
     }
-  } catch (err) {
-    console.error("Failed to create notifications for new job", err);
-  }
+  })();
 
   res.status(200).json({
     success: true,
