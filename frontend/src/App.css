@@ -7935,38 +7935,39 @@ nav .hamburger {
 .appDash-submission-right {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 14px;
-  flex-wrap: wrap;
 }
 
 /* Status Badge */
 .appDash-status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 14px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9px;
+  font-size: 0.81rem;
+  font-weight: 700;
   letter-spacing: 0.3px;
 }
 
 .appDash-status-badge--pending {
-  background: rgba(251, 191, 36, 0.1);
-  color: #d97706;
-  border: 1px solid rgba(251, 191, 36, 0.25);
+  background: #fffbeb;
+  color: #b45309;
+  border: 1.5px solid #fde68a;
 }
 
 .appDash-status-badge--accepted {
-  background: rgba(16, 185, 129, 0.1);
-  color: #059669;
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: #ecfdf5;
+  color: #047857;
+  border: 1.5px solid #a7f3d0;
 }
 
 .appDash-status-badge--rejected {
-  background: rgba(239, 68, 68, 0.08);
+  background: #fef2f2;
   color: #dc2626;
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border: 1.5px solid #fecaca;
 }
 
 /* Cover letter preview text */
@@ -8252,35 +8253,69 @@ nav .hamburger {
   font-style: italic;
 }
 
-/* Seeker Actions */
+/* Seeker Actions - Column Structure */
 .appDash-seeker-actions {
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
+  min-width: 145px;
+}
+
+.appDash-seeker-actions .appDash-status-badge,
+.appDash-seeker-actions .appDash-action-btn,
+.appDash-seeker-actions .appDash-fraud-badge {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 9px;
+  font-size: 0.81rem;
+  font-weight: 600;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .appDash-action-btn--fraud {
-  background: #fffbeb;
+  background: #ffffff;
   color: #b45309;
   border: 1.5px solid #fde68a;
   font-weight: 600;
 }
 
 .appDash-action-btn--fraud:hover {
-  background: #fef3c7;
+  background: #fffbeb;
   color: #92400e;
-  border-color: #fcd34d;
+  border-color: #f59e0b;
   transform: translateY(-1px);
   box-shadow: 0 3px 10px rgba(217, 119, 6, 0.15);
+}
+
+.appDash-seeker-actions .appDash-action-btn--delete {
+  background: #ffffff;
+  color: #dc2626;
+  border: 1.5px solid #fca5a5;
+  font-weight: 600;
+}
+
+.appDash-seeker-actions .appDash-action-btn--delete:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #ef4444;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(220, 38, 38, 0.15);
 }
 
 .appDash-fraud-badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 6px 14px;
-  border-radius: 20px;
+  padding: 7px 14px;
+  border-radius: 9px;
   background: #fef2f2;
   color: #b91c1c;
   border: 1.5px solid #fecaca;

@@ -401,15 +401,17 @@ const MyApplications = () => {
                           </button>
                         )}
 
-                        <button
-                          className="appDash-action-btn appDash-action-btn--delete"
-                          onClick={() =>
-                            handleDeleteApplication(element._id)
-                          }
-                          title="Withdraw Application"
-                        >
-                          <HiOutlineTrash /> Withdraw
-                        </button>
+                        {element.status !== "Rejected" && (
+                          <button
+                            className="appDash-action-btn appDash-action-btn--delete"
+                            onClick={() =>
+                              handleDeleteApplication(element._id)
+                            }
+                            title="Withdraw Application"
+                          >
+                            <HiOutlineTrash /> Withdraw
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>

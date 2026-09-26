@@ -471,6 +471,9 @@ export const jobseekerDeleteApplication = catchAsyncErrors(async (req, res, next
   if (!application) {
     return next(new ErrorHandler("Application not found!", 404));
   }
+  if (application.status === "Rejected") {
+    return next(new ErrorHandler("Cannot withdraw a rejected application.", 400));
+  }
   await application.deleteOne();
   res.status(200).json({ success: true, message: "Application Deleted!" });
 });
