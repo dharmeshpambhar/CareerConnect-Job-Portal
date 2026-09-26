@@ -210,93 +210,135 @@ const PostJob = () => {
           Cancel and Return to Panel
         </button>
 
-        {/* Form card */}
-        <div className="post-job-card glass-panel">
-          {/* Card header */}
-          <div className="post-job-header">
-            <div className="post-job-icon">
-              <FiBriefcase />
-            </div>
-            <div>
-              <h1 className="post-job-title">Post a New Job</h1>
-              <p className="post-job-subtitle">
-                Publish detailed criteria to attract the finest engineering talents.
-              </p>
-            </div>
-          </div>
-
-          {/* ── Company Verification Status Alert ── */}
-          {user?.verificationStatus === "Pending" && !user?.isVerified && (
+        {/* When Company Verification is Pending */}
+        {user?.verificationStatus === "Pending" && !user?.isVerified && (
+          <div className="post-job-card glass-panel" style={{ textAlign: "center", padding: "3.5rem 2rem" }}>
             <div
               style={{
-                background: "#fffbeb",
-                border: "1.5px solid #fde68a",
-                borderRadius: "12px",
-                padding: "16px 20px",
-                marginBottom: "24px",
-                display: "flex",
-                alignItems: "flex-start",
-                gap: "14px",
-              }}
-            >
-              <span style={{ fontSize: "1.6rem", lineHeight: 1 }}>⏳</span>
-              <div>
-                <h4 style={{ margin: "0 0 4px 0", color: "#b45309", fontSize: "0.95rem", fontWeight: 700 }}>
-                  Company Verification Pending Admin Review
-                </h4>
-                <p style={{ margin: 0, color: "#92400e", fontSize: "0.84rem", lineHeight: 1.5 }}>
-                  Your company registration certificate has been submitted and is currently being audited by our Trust & Safety Administration team. You will be able to publish official job vacancies as soon as verification is approved.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {user?.verificationStatus === "Rejected" && (
-            <div
-              style={{
-                background: "#fef2f2",
-                border: "1.5px solid #fecaca",
-                borderRadius: "12px",
-                padding: "16px 20px",
-                marginBottom: "24px",
-                display: "flex",
-                alignItems: "flex-start",
-                gap: "14px",
-              }}
-            >
-              <span style={{ fontSize: "1.6rem", lineHeight: 1 }}>❌</span>
-              <div>
-                <h4 style={{ margin: "0 0 4px 0", color: "#dc2626", fontSize: "0.95rem", fontWeight: 700 }}>
-                  Company Verification Not Approved
-                </h4>
-                <p style={{ margin: 0, color: "#991b1b", fontSize: "0.84rem", lineHeight: 1.5 }}>
-                  {user?.verificationRemarks
-                    ? `Admin Remarks: ${user.verificationRemarks}`
-                    : "The uploaded company document could not be verified. Please contact platform administrators or re-submit valid registration documentation."}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {(user?.isVerified || user?.verificationStatus === "Approved") && (
-            <div
-              style={{
-                background: "#ecfdf5",
-                border: "1.5px solid #a7f3d0",
-                borderRadius: "12px",
-                padding: "12px 18px",
-                marginBottom: "24px",
+                width: "68px",
+                height: "68px",
+                borderRadius: "50%",
+                background: "rgba(14, 165, 233, 0.1)",
+                color: "#0ea5e9",
                 display: "flex",
                 alignItems: "center",
-                gap: "12px",
+                justifyContent: "center",
+                fontSize: "2rem",
+                margin: "0 auto 1.5rem auto",
+                border: "1px solid rgba(14, 165, 233, 0.25)",
               }}
             >
-              <span style={{ fontSize: "1.3rem" }}>🛡️</span>
-              <span style={{ color: "#065f46", fontSize: "0.85rem", fontWeight: 600 }}>
-                <strong>Verified Official Company Account:</strong> Your postings will display the verified badge and inspire full candidate trust.
-              </span>
+              ⏳
             </div>
-          )}
+            <h2 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#0f172a", marginBottom: "0.75rem", letterSpacing: "-0.3px" }}>
+              Account Currently Under Review
+            </h2>
+            <p style={{ fontSize: "0.96rem", color: "#64748b", maxWidth: "520px", margin: "0 auto 1.75rem auto", lineHeight: 1.65 }}>
+              Your company verification is currently pending review. Please wait while the administration verifies your account details. You will be able to post active job vacancies as soon as verification is approved.
+            </p>
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "#f8fafc",
+                border: "1px solid #e2e8f0",
+                padding: "8px 18px",
+                borderRadius: "20px",
+                fontSize: "0.82rem",
+                color: "#475569",
+                fontWeight: 600,
+                marginBottom: "2rem",
+              }}
+            >
+              <span>⏱️</span>
+              <span>Submitted company documents and credentials are typically reviewed within 24–48 hours.</span>
+            </div>
+            <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={() => navigate("/job/getall")}
+                className="pj-submit-btn"
+                style={{ width: "auto", padding: "12px 24px", background: "#f1f5f9", color: "#334155", border: "1px solid #cbd5e1" }}
+              >
+                Browse Job Marketplace
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/job/me")}
+                className="pj-submit-btn"
+                style={{ width: "auto", padding: "12px 24px" }}
+              >
+                Go to My Jobs
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* When Company Verification is Rejected */}
+        {user?.verificationStatus === "Rejected" && !user?.isVerified && (
+          <div className="post-job-card glass-panel" style={{ textAlign: "center", padding: "3.5rem 2rem" }}>
+            <div
+              style={{
+                width: "68px",
+                height: "68px",
+                borderRadius: "50%",
+                background: "rgba(239, 68, 68, 0.1)",
+                color: "#ef4444",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "2rem",
+                margin: "0 auto 1.5rem auto",
+                border: "1px solid rgba(239, 68, 68, 0.25)",
+              }}
+            >
+              ❌
+            </div>
+            <h2 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#0f172a", marginBottom: "0.75rem" }}>
+              Company Verification Not Approved
+            </h2>
+            <p style={{ fontSize: "0.96rem", color: "#64748b", maxWidth: "520px", margin: "0 auto 1.75rem auto", lineHeight: 1.65 }}>
+              {user?.verificationRemarks
+                ? `Admin Remarks: "${user.verificationRemarks}"`
+                : "Your company registration documentation could not be verified by the administration. Please contact platform support or re-submit valid credentials."}
+            </p>
+            <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={() => navigate("/job/getall")}
+                className="pj-submit-btn"
+                style={{ width: "auto", padding: "12px 24px", background: "#f1f5f9", color: "#334155", border: "1px solid #cbd5e1" }}
+              >
+                Return to Job Marketplace
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/profile")}
+                className="pj-submit-btn"
+                style={{ width: "auto", padding: "12px 24px" }}
+              >
+                Update Company Profile
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* When Company is Verified: Show the Form */}
+        {(user?.isVerified || user?.verificationStatus === "Approved") && (
+          <div className="post-job-card glass-panel">
+            {/* Card header */}
+            <div className="post-job-header">
+              <div className="post-job-icon">
+                <FiBriefcase />
+              </div>
+              <div>
+                <h1 className="post-job-title">Post a New Job</h1>
+                <p className="post-job-subtitle">
+                  Publish detailed criteria to attract the finest engineering talents.
+                </p>
+              </div>
+            </div>
 
           <form onSubmit={handleJobPost} className="post-job-form">
             {/* Row 1: Title + Salary + Vacancies */}
@@ -454,6 +496,7 @@ const PostJob = () => {
             </button>
           </form>
         </div>
+        )}
       </div>
     </div>
   );
