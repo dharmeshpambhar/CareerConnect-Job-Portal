@@ -30,6 +30,10 @@ const Login = () => {
   const [regRole, setRegRole] = useState("Job Seeker");
   const [regName, setRegName] = useState("");
   const [regPhone, setRegPhone] = useState("");
+  const [regCompanyName, setRegCompanyName] = useState("");
+  const [regCompanyRegNo, setRegCompanyRegNo] = useState("");
+  const [certificateFile, setCertificateFile] = useState(null);
+  const [certificateFileName, setCertificateFileName] = useState("");
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(true);
 
@@ -106,8 +110,21 @@ const Login = () => {
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     const errs = {};
-    if (!regName.trim()) errs.name = "Full name is required.";
+    if (!regName.trim()) errs.name = "Contact / Recruiter name is required.";
     else if (!isValidName(regName)) errs.name = "Name must contain only letters, spaces, or dots (min 2 chars).";
+    
+    if (regRole === "Employer") {
+      if (!regCompanyName.trim()) {
+        errs.companyName = "Official company name is required.";
+      }
+      if (!regCompanyRegNo.trim()) {
+        errs.companyRegNo = "Govt Registration / CIN / Tax ID is required.";
+      }
+      if (!certificateFile) {
+        errs.certificate = "Company registration certificate is required.";
+      }
+    }
+
     if (!regEmail.trim()) errs.email = "Email address is required.";
     else if (!isValidEmail(regEmail)) errs.email = "Enter a valid email address.";
     if (!regPhone.trim()) errs.phone = "Phone number is required.";
@@ -119,16 +136,41 @@ const Login = () => {
     setRegErrors({});
     setLoading(true);
     try {
+      const formData = new FormData();
+      formData.append("name", regName);
+      formData.append("phone", regPhone);
+      formData.append("email", regEmail);
+      formData.append("role", regRole);
+      formData.append("password", regPassword);
+
+      if (regRole === "Employer") {
+        formData.append("companyName", regCompanyName.trim() || regName.trim());
+        formData.append("companyRegistrationNumber", regCompanyRegNo.trim());
+        if (certificateFile) {
+          formData.append("companyCertificate", certificateFile);
+        }
+      }
+
       const { data } = await axios.post(
         `${API_BASE}/user/register`,
-        { name: regName, phone: regPhone, email: regEmail, role: regRole, password: regPassword },
+        formData,
         {
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "multipart/form-data" },
           withCredentials: true,
         }
       );
-      toast.success(data.message || "Account registered successfully!");
+
+      if (regRole === "Employer") {
+        toast.success("Registration submitted! Your company certificate is sent for Admin Verification.");
+      } else {
+        toast.success(data.message || "Account registered successfully!");
+      }
+
       setRegName("");
+      setRegCompanyName("");
+      setRegCompanyRegNo("");
+      setCertificateFile(null);
+      setCertificateFileName("");
       setRegEmail("");
       setRegPhone("");
       setRegPassword("");
@@ -414,14 +456,14 @@ const Login = () => {
                   {/* Name Input */}
                   <div className="auth-field-group">
                     <label className="auth-field-label" htmlFor="reg-name">
-                      Full Name / Company Name
+                      {regRole === "Job Seeker" ? "Full Name" : "Recruiter / Contact Person Name"}
                     </label>
                     <div className={`auth-input-wrapper ${regErrors.name ? "auth-input-error" : ""}`}>
                       <FaRegUser className="auth-input-icon" />
                       <input
                         id="reg-name"
                         type="text"
-                        placeholder={regRole === "Job Seeker" ? "e.g. Dharmesh Pambhar" : "e.g. Acme Corporation"}
+                        placeholder={regRole === "Job Seeker" ? "e.g. Dharmesh Pambhar" : "e.g. John Doe (HR Lead)"}
                         value={regName}
                         onChange={(e) => {
                           // Block digits and special characters from name field
@@ -435,6 +477,148 @@ const Login = () => {
                     </div>
                     {regErrors.name && <p className="auth-field-error">{regErrors.name}</p>}
                   </div>
+
+                  {/* Employer Specific: Company Name & CIN/Reg No */}
+                  {regRole === "Employer" && (
+                    <>
+                      <div className="auth-field-group">
+                        <label className="auth-field-label" htmlFor="reg-company-name">
+                          Official Company / Enterprise Name
+                        </label>
+                        <div className={`auth-input-wrapper ${regErrors.companyName ? "auth-input-error" : ""}`}>
+                          <FaBuilding className="auth-input-icon" />
+                          <input
+                            id="reg-company-name"
+                            type="text"
+                            placeholder="e.g. Google, Microsoft, TechCorp Solutions"
+                            value={regCompanyName}
+                            onChange={(e) => {
+                              setRegCompanyName(e.target.value);
+                              setRegErrors((p) => ({ ...p, companyName: "" }));
+                            }}
+                            className="auth-input-control"
+                          />
+                        </div>
+                        {regErrors.companyName && <p className="auth-field-error">{regErrors.companyName}</p>}
+                      </div>
+
+                      <div className="auth-field-group">
+                        <label className="auth-field-label" htmlFor="reg-company-regno">
+                          Govt Registration / CIN / Tax ID
+                        </label>
+                        <div className={`auth-input-wrapper ${regErrors.companyRegNo ? "auth-input-error" : ""}`}>
+                          <FaBriefcase className="auth-input-icon" />
+                          <input
+                            id="reg-company-regno"
+                            type="text"
+                            placeholder="e.g. CIN: U72200MH2019PTC123456 / GSTIN"
+                            value={regCompanyRegNo}
+                            onChange={(e) => {
+                              setRegCompanyRegNo(e.target.value);
+                              setRegErrors((p) => ({ ...p, companyRegNo: "" }));
+                            }}
+                            className="auth-input-control"
+                          />
+                        </div>
+                        {regErrors.companyRegNo && <p className="auth-field-error">{regErrors.companyRegNo}</p>}
+                      </div>
+
+                      {/* Certificate Upload Field */}
+                      <div className="auth-field-group">
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                          <label className="auth-field-label" style={{ margin: 0 }}>
+                            Company Registration Certificate / Document
+                          </label>
+                          <span style={{ fontSize: "0.72rem", color: "#0ea5e9", fontWeight: 600 }}>
+                            🛡️ Required for Verification
+                          </span>
+                        </div>
+
+                        <div
+                          style={{
+                            border: regErrors.certificate ? "1.5px dashed #ef4444" : "1.5px dashed #cbd5e1",
+                            borderRadius: "10px",
+                            padding: "14px",
+                            background: certificateFile ? "#f8fafc" : "#ffffff",
+                            textAlign: "center",
+                            cursor: "pointer",
+                            position: "relative",
+                            transition: "all 0.2s ease",
+                          }}
+                        >
+                          <input
+                            type="file"
+                            id="reg-certificate"
+                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"
+                            onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                setCertificateFile(file);
+                                setCertificateFileName(file.name);
+                                setRegErrors((p) => ({ ...p, certificate: "" }));
+                              }
+                            }}
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              opacity: 0,
+                              cursor: "pointer",
+                              width: "100%",
+                              height: "100%",
+                            }}
+                          />
+                          {certificateFile ? (
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+                              <FaCheck style={{ color: "#10b981", fontSize: "1.1rem" }} />
+                              <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#1e293b" }}>
+                                {certificateFileName}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCertificateFile(null);
+                                  setCertificateFileName("");
+                                }}
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  color: "#ef4444",
+                                  cursor: "pointer",
+                                  fontSize: "0.78rem",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          ) : (
+                            <div>
+                              <div style={{ fontSize: "0.84rem", fontWeight: 600, color: "#475569" }}>
+                                📄 Click or drag to upload Company Certificate (PDF, PNG, JPG)
+                              </div>
+                              <div style={{ fontSize: "0.74rem", color: "#94a3b8", marginTop: "2px" }}>
+                                Official incorporation certificate, GST doc, or business license
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        {regErrors.certificate && <p className="auth-field-error">{regErrors.certificate}</p>}
+
+                        {/* Verification Notice */}
+                        <p
+                          style={{
+                            margin: "6px 0 0 0",
+                            fontSize: "0.78rem",
+                            color: "#64748b",
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          Submitted company documents and credentials are typically reviewed within 24–48 hours.
+                        </p>
+                      </div>
+                    </>
+                  )}
 
                   {/* Email & Phone Split Row */}
                   <div className="auth-fields-split-row">

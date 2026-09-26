@@ -64,6 +64,33 @@ const userSchema = new mongoose.Schema({
     enum: ["Active", "Warned", "Frozen", "Blacklisted"],
     default: "Active",
   },
+  companyRegistrationNumber: {
+    type: String,
+    default: "",
+  },
+  companyCertificate: {
+    public_id: { type: String, default: "" },
+    url: { type: String, default: "" },
+    fileName: { type: String, default: "" },
+    uploadedAt: { type: Date, default: null },
+  },
+  verificationStatus: {
+    type: String,
+    enum: ["Pending", "Approved", "Rejected"],
+    default: "Pending",
+  },
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
+  verificationRemarks: {
+    type: String,
+    default: "",
+  },
+  verifiedAt: {
+    type: Date,
+    default: null,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

@@ -225,6 +225,79 @@ const PostJob = () => {
             </div>
           </div>
 
+          {/* ── Company Verification Status Alert ── */}
+          {user?.verificationStatus === "Pending" && !user?.isVerified && (
+            <div
+              style={{
+                background: "#fffbeb",
+                border: "1.5px solid #fde68a",
+                borderRadius: "12px",
+                padding: "16px 20px",
+                marginBottom: "24px",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "14px",
+              }}
+            >
+              <span style={{ fontSize: "1.6rem", lineHeight: 1 }}>⏳</span>
+              <div>
+                <h4 style={{ margin: "0 0 4px 0", color: "#b45309", fontSize: "0.95rem", fontWeight: 700 }}>
+                  Company Verification Pending Admin Review
+                </h4>
+                <p style={{ margin: 0, color: "#92400e", fontSize: "0.84rem", lineHeight: 1.5 }}>
+                  Your company registration certificate has been submitted and is currently being audited by our Trust & Safety Administration team. You will be able to publish official job vacancies as soon as verification is approved.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {user?.verificationStatus === "Rejected" && (
+            <div
+              style={{
+                background: "#fef2f2",
+                border: "1.5px solid #fecaca",
+                borderRadius: "12px",
+                padding: "16px 20px",
+                marginBottom: "24px",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "14px",
+              }}
+            >
+              <span style={{ fontSize: "1.6rem", lineHeight: 1 }}>❌</span>
+              <div>
+                <h4 style={{ margin: "0 0 4px 0", color: "#dc2626", fontSize: "0.95rem", fontWeight: 700 }}>
+                  Company Verification Not Approved
+                </h4>
+                <p style={{ margin: 0, color: "#991b1b", fontSize: "0.84rem", lineHeight: 1.5 }}>
+                  {user?.verificationRemarks
+                    ? `Admin Remarks: ${user.verificationRemarks}`
+                    : "The uploaded company document could not be verified. Please contact platform administrators or re-submit valid registration documentation."}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {(user?.isVerified || user?.verificationStatus === "Approved") && (
+            <div
+              style={{
+                background: "#ecfdf5",
+                border: "1.5px solid #a7f3d0",
+                borderRadius: "12px",
+                padding: "12px 18px",
+                marginBottom: "24px",
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+              }}
+            >
+              <span style={{ fontSize: "1.3rem" }}>🛡️</span>
+              <span style={{ color: "#065f46", fontSize: "0.85rem", fontWeight: 600 }}>
+                <strong>Verified Official Company Account:</strong> Your postings will display the verified badge and inspire full candidate trust.
+              </span>
+            </div>
+          )}
+
           <form onSubmit={handleJobPost} className="post-job-form">
             {/* Row 1: Title + Salary + Vacancies */}
             <div className="post-job-row post-job-row-3">

@@ -8,6 +8,8 @@ import {
   deleteJob,
   getApplications,
   deleteApplication,
+  getCompanyVerifications,
+  verifyCompany,
 } from "../controllers/adminController.js";
 import {
   adminLogin,
@@ -28,6 +30,12 @@ router.use(isAdminAuthenticated);
 router.use(isAdmin);
 
 router.get("/stats", getStats);
+
+router.route("/companies/verifications")
+  .get(getCompanyVerifications);
+
+router.route("/companies/:id/verify")
+  .put(verifyCompany);
 
 router.route("/users")
   .get(getUsers);

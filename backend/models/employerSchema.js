@@ -76,6 +76,34 @@ const employerSchema = new mongoose.Schema(
       enum: ["Active", "Warned", "Frozen", "Blacklisted"],
       default: "Active",
     },
+    // ── Company Certificate & Admin Verification ──
+    companyRegistrationNumber: {
+      type: String,
+      default: "",
+    },
+    companyCertificate: {
+      public_id: { type: String, default: "" },
+      url: { type: String, default: "" },
+      fileName: { type: String, default: "" },
+      uploadedAt: { type: Date, default: null },
+    },
+    verificationStatus: {
+      type: String,
+      enum: ["Pending", "Approved", "Rejected"],
+      default: "Pending",
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    verificationRemarks: {
+      type: String,
+      default: "",
+    },
+    verifiedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true, collection: "employers" }
 );

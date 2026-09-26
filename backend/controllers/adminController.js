@@ -219,3 +219,75 @@ export const deleteApplication = catchAsyncErrors(async (req, res, next) => {
     message: "Application deleted successfully!",
   });
 });
+
+// Company Certificate Verifications: Get all employers & their verification status
+export const getCompanyVerifications = catchAsyncErrors(async (req, res, next) => {
+  const employers = await Employer.find().select("-password").sort({ createdAt: -1 }).lean();
+  const legacyEmployers = await User.find({ role: "Employer" }).select("-password").sort({ createdAt: -1 }).lean();
+
+  const empMap = new Map();
+  employers.forEach((e) => empMap.set(e._id.toString(), e));
+  legacyEmployers.forEach((u) => {
+    if (!empMap.has(u._id.toString())) {
+      empMap.set(u._id.toString(), {
+        ...u,
+        companyName: u.company?.name || u.name || "Company",
+      });
+    }
+  });
+
+  const companies = Array.from(empMap.values()).map((c) => ({
+    _id: c._id,
+    name: c.name,
+    companyName: c.companyName || c.company?.name || c.name || "Company",
+    email: c.email,
+    phone: c.phone,
+    website: c.website || c.company?.website || "",
+    location: c.location || c.company?.location || "",
+    industry: c.industry || c.company?.industry || "",
+    companyRegistrationNumber: c.companyRegistrationNumber || "",
+    companyCertificate: c.companyCertificate || { url: "", fileName: "" },
+    verificationStatus: c.verificationStatus || "Pending",
+    isVerified: Boolean(c.isVerified || c.verificationStatus === "Approved"),
+    verificationRemarks: c.verificationRemarks || "",
+    verifiedAt: c.verifiedAt || null,
+    createdAt: c.createdAt,
+  }));
+
+  res.status(200).json({
+    success: true,
+    companies,
+  });
+});
+
+// Company Certificate Verifications: Approve or Reject company verification
+export const verifyCompany = catchAsyncErrors(async (req, res, next) => {
+  const { id } = req.params;
+  const { status, remarks } = req.body;
+
+  if (!["Approved", "Rejected", "Pending"].includes(status)) {
+    return next(new ErrorHandler("Invalid verification status. Must be Approved, Rejected, or Pending.", 400));
+  }
+
+  let employer = await Employer.findById(id);
+  if (!employer) {
+    employer = await User.findById(id);
+  }
+
+  if (!employer) {
+    return next(new ErrorHandler("Company / Employer not found!", 404));
+  }
+
+  employer.verificationStatus = status;
+  employer.isVerified = (status === "Approved");
+  employer.verificationRemarks = remarks || (status === "Approved" ? "Company certificate verified and approved by Administrator." : "Verification documentation rejected.");
+  employer.verifiedAt = (status === "Approved" ? new Date() : null);
+
+  await employer.save();
+
+  res.status(200).json({
+    success: true,
+    message: `Company status successfully updated to ${status}!`,
+    company: employer,
+  });
+});

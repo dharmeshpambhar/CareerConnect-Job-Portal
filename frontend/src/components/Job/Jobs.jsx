@@ -989,12 +989,29 @@ const Jobs = () => {
                               title="Click to view company profile"
                             >
                               <span>{companyTitleName}</span>
-                              <MdOutlineVerified className="verified-ico" />
                             </Link>
                           ) : (
                             <span className="job-v3-company-name">
                               {companyTitleName}
-                              <MdOutlineVerified className="verified-ico" />
+                            </span>
+                          )}
+                          {element.postedBy?.isVerified && (
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "3px",
+                                background: "#ecfdf5",
+                                color: "#059669",
+                                border: "1px solid #a7f3d0",
+                                borderRadius: "20px",
+                                padding: "1px 7px",
+                                fontSize: "0.7rem",
+                                fontWeight: 700,
+                              }}
+                              title="Official Verified Company (Certificate Verified by Admin)"
+                            >
+                              ✓ Verified
                             </span>
                           )}
                           <span className="job-v3-dot">•</span>

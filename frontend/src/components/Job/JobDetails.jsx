@@ -331,7 +331,7 @@ const JobDetails = () => {
                 )}
                 <div className="job-details-header-info">
                   <h2>{job.title}</h2>
-                  <p>
+                  <p style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                     {getEmployerId(job) ? (
                       <Link to={`/company/view/${getEmployerId(job)}`} className="job-details-company-link" title="Click to view company details">
                         {companyTitleName} ↗
@@ -339,7 +339,26 @@ const JobDetails = () => {
                     ) : (
                       <span>{companyTitleName}</span>
                     )}
-                    {` • ${job.city}, ${job.country}`}
+                    {job.postedBy?.isVerified && (
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          background: "#ecfdf5",
+                          color: "#059669",
+                          border: "1px solid #a7f3d0",
+                          borderRadius: "20px",
+                          padding: "2px 8px",
+                          fontSize: "0.74rem",
+                          fontWeight: 700,
+                        }}
+                        title="Official Verified Company (Certificate Verified by Admin)"
+                      >
+                        ✓ Verified Employer
+                      </span>
+                    )}
+                    <span>{`• ${job.city}, ${job.country}`}</span>
                   </p>
                 </div>
                 {user && user.role === "Job Seeker" && (

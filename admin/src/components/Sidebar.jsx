@@ -6,7 +6,7 @@ import {
   RxFileText, 
   RxExit 
 } from "react-icons/rx";
-import { FaBriefcase, FaShieldAlt } from "react-icons/fa";
+import { FaBriefcase, FaShieldAlt, FaBuilding } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { Context } from "../main";
@@ -18,7 +18,7 @@ const Sidebar = () => {
   const handleLogout = async () => {
     try {
       const { data } = await axios.get(
-        `${import.meta.env.VITE_API_URL || "http://localhost:4000/api/v1"}/user/logout`,
+        `${import.meta.env.VITE_API_URL || "http://localhost:4000/api/v1"}/admin/auth/logout`,
         {
           withCredentials: true,
         }
@@ -68,6 +68,12 @@ const Sidebar = () => {
             <NavLink to="/applications" className="sidebar-link">
               <RxFileText />
               <span>Applications</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/company-verifications" className="sidebar-link">
+              <FaBuilding />
+              <span>Company Verifications</span>
             </NavLink>
           </li>
           <li>

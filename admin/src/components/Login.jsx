@@ -2,8 +2,7 @@ import React, { useState, useContext } from "react";
 import { Navigate, useNavigate, Link } from "react-router-dom";
 import { MdOutlineMailOutline, MdSecurity } from "react-icons/md";
 import { AiOutlineEye, AiOutlineEyeInvisible, AiOutlineLock } from "react-icons/ai";
-import { FaShieldAlt } from "react-icons/fa";
-import { FaArrowRight, FaCheck } from "react-icons/fa6";
+import { FaShieldAlt, FaArrowRight, FaCheck } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { Context } from "../main";
@@ -62,37 +61,22 @@ const Login = () => {
           {/* Brand Header */}
           <div className="auth-brand-header">
             <Link to="/" className="auth-logo-link">
-              <span className="auth-logo-text">CareerConnect</span>
+              <img src="/careerconnect-black.png" alt="CareerConnect Logo" className="auth-logo-img" />
             </Link>
             <div className="auth-badge-pill">
               <span className="auth-badge-dot" />
-              <span>ADMIN ACCESS</span>
+              <span>CAREER PLATFORM</span>
             </div>
           </div>
 
           {/* Heading Intro */}
           <div className="auth-title-group">
             <h1 className="auth-main-heading">
-              Admin Portal<span className="auth-heading-accent">.</span>
+              Welcome Back<span className="auth-heading-accent">.</span>
             </h1>
             <p className="auth-sub-heading">
-              Enter your master administrator credentials to access the control center.
+              Enter your credentials to access the admin dashboard & system controls.
             </p>
-          </div>
-
-          {/* Role Indicator Card */}
-          <div className="auth-field-group" style={{ marginBottom: "16px" }}>
-            <label className="auth-field-label">Portal Authorization</label>
-            <div className="auth-role-card selected" style={{ cursor: "default" }}>
-              <div className="role-card-icon-wrap" style={{ background: "#6366f1", color: "#ffffff", borderColor: "#6366f1" }}>
-                <FaShieldAlt />
-              </div>
-              <div className="role-card-text">
-                <span className="role-card-title">System Administrator</span>
-                <span className="role-card-desc">Master Security & Platform Management</span>
-              </div>
-              <FaCheck className="role-check-badge" style={{ color: "#6366f1", background: "#ede9fe" }} />
-            </div>
           </div>
 
           {/* Login Form */}
@@ -100,7 +84,7 @@ const Login = () => {
             {/* Email Field */}
             <div className="auth-field-group">
               <label className="auth-field-label" htmlFor="admin-email">
-                Admin Email Address
+                Work / Personal Email
               </label>
               <div className="auth-input-wrapper">
                 <MdOutlineMailOutline className="auth-input-icon" />
@@ -119,7 +103,7 @@ const Login = () => {
             {/* Password Field */}
             <div className="auth-field-group">
               <label className="auth-field-label" htmlFor="admin-password">
-                Master Password
+                Password
               </label>
               <div className="auth-input-wrapper">
                 <AiOutlineLock className="auth-input-icon" />
@@ -152,7 +136,7 @@ const Login = () => {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="auth-custom-checkbox"
                 />
-                <span>Remember this session securely</span>
+                <span>Keep me signed in on this device</span>
               </label>
             </div>
 
@@ -165,14 +149,14 @@ const Login = () => {
                 </span>
               ) : (
                 <span className="btn-normal-content">
-                  Access Control Center <FaArrowRight className="btn-arrow-icon" />
+                  Sign In to Account <FaArrowRight className="btn-arrow-icon" />
                 </span>
               )}
             </button>
 
             {/* Footer Trust Note */}
             <div className="auth-security-footer-note">
-              <MdSecurity style={{ fontSize: "1.1rem", color: "#6366f1" }} />
+              <MdSecurity style={{ fontSize: "1.05rem", color: "#0ea5e9" }} />
               <span>Authorized administrator personnel only. All access attempts are logged.</span>
             </div>
           </form>

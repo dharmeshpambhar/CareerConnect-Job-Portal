@@ -4,8 +4,7 @@ import toast from "react-hot-toast";
 import { 
   RxAvatar, 
   RxFileText, 
-  RxPerson, 
-  RxCalendar 
+  RxPerson,
 } from "react-icons/rx";
 import { FaBriefcase } from "react-icons/fa";
 

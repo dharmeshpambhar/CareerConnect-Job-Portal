@@ -9,6 +9,7 @@ import Accounts from "./components/Accounts";
 import Jobs from "./components/Jobs";
 import Applications from "./components/Applications";
 import FraudReports from "./components/FraudReports";
+import CompanyVerifications from "./components/CompanyVerifications";
 import Login from "./components/Login";
 import "./App.css";
 
@@ -17,13 +18,14 @@ const ProtectedRoute = ({ children }) => {
 
   if (isLoading) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", color: "#fff" }}>
-        <div className="spinner">Loading Admin Panel...</div>
+      <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", height: "100vh", gap: "12px" }}>
+        <div className="admin-spinner" />
+        <span style={{ fontWeight: 600, color: "#475569", fontSize: "0.95rem" }}>Authenticating Admin Session...</span>
       </div>
     );
   }
 
-  if (!isAuthorized || user.role !== "Admin") {
+  if (!isAuthorized || (user?.role && user.role !== "Admin")) {
     return <Navigate to="/login" replace />;
   }
 
@@ -40,6 +42,7 @@ const App = () => {
           `${import.meta.env.VITE_API_URL || "http://localhost:4000/api/v1"}/admin/auth/me`,
           {
             withCredentials: true,
+            timeout: 4000,
           }
         );
         
@@ -98,6 +101,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <Applications />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/company-verifications" 
+                element={
+                  <ProtectedRoute>
+                    <CompanyVerifications />
                   </ProtectedRoute>
                 } 
               />

@@ -24,8 +24,8 @@ const populateJobsWithCompanyDetails = async (rawJobs) => {
   }
   const queryIds = [...postedByIdsRaw, ...objIds];
 
-  const users = await User.find({ _id: { $in: queryIds } }).select("name email company role profilePicture").lean();
-  const employers = await Employer.find({ _id: { $in: queryIds } }).select("name email companyName tagline industry companySize founded website location description profilePicture faqs recruiterName recruiterTitle").lean();
+  const users = await User.find({ _id: { $in: queryIds } }).select("name email company role profilePicture isVerified verificationStatus companyRegistrationNumber").lean();
+  const employers = await Employer.find({ _id: { $in: queryIds } }).select("name email companyName tagline industry companySize founded website location description profilePicture faqs recruiterName recruiterTitle isVerified verificationStatus companyRegistrationNumber").lean();
   
   const userMap = new Map();
   users.forEach((u) => userMap.set(u._id.toString(), u));
@@ -50,6 +50,8 @@ const populateJobsWithCompanyDetails = async (rawJobs) => {
       ? `${usr.name.trim()}'s Company`
       : "Verified Employer";
     
+    const isCompanyVerified = Boolean(emp?.isVerified || usr?.isVerified || emp?.verificationStatus === "Approved" || usr?.verificationStatus === "Approved");
+
     return {
       ...jobObj,
       postedBy: {
@@ -57,12 +59,18 @@ const populateJobsWithCompanyDetails = async (rawJobs) => {
         name: emp?.name || usr?.name || "Employer",
         email: emp?.email || usr?.email || "",
         companyName: resolvedCompanyName,
+        isVerified: isCompanyVerified,
+        verificationStatus: emp?.verificationStatus || usr?.verificationStatus || (isCompanyVerified ? "Approved" : "Pending"),
+        companyRegistrationNumber: emp?.companyRegistrationNumber || usr?.companyRegistrationNumber || "",
         profilePicture: emp?.profilePicture || usr?.profilePicture || null,
         faqs: emp?.faqs || usr?.company?.faqs || [],
         recruiterName: emp?.recruiterName || emp?.name || usr?.name || "",
         recruiterTitle: emp?.recruiterTitle || "",
         company: {
           name: resolvedCompanyName,
+          isVerified: isCompanyVerified,
+          verificationStatus: emp?.verificationStatus || usr?.verificationStatus || (isCompanyVerified ? "Approved" : "Pending"),
+          companyRegistrationNumber: emp?.companyRegistrationNumber || usr?.companyRegistrationNumber || "",
           location: emp?.location || usr?.company?.location || "",
           industry: emp?.industry || usr?.company?.industry || "",
           website: emp?.website || usr?.company?.website || "",
@@ -117,6 +125,17 @@ export const postJob = catchAsyncErrors(async (req, res, next) => {
       new ErrorHandler("Job Seeker not allowed to access this resource.", 400)
     );
   }
+
+  const employerUser = (await Employer.findById(req.user._id)) || (await User.findById(req.user._id));
+  if (employerUser && !employerUser.isVerified && employerUser.verificationStatus !== "Approved") {
+    return next(
+      new ErrorHandler(
+        "Company Verification Required: Your company account is currently pending Admin verification. You will be able to publish official job vacancies once an administrator reviews and approves your company certificate.",
+        403
+      )
+    );
+  }
+
   const {
     title,
     description,

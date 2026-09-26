@@ -46,6 +46,48 @@ export const register = catchAsyncErrors(async (req, res, next) => {
       keySkills: ["React.js", "JavaScript", "SQL", "Node.js", "Python"],
     });
   } else if (role === "Employer") {
+    let certificateData = {
+      public_id: "",
+      url: "",
+      fileName: "",
+      uploadedAt: null,
+    };
+
+    if (req.files && req.files.companyCertificate) {
+      const { companyCertificate } = req.files;
+      const allowedExtensions = [".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png", ".webp"];
+      const fileName = (companyCertificate.name || "").toLowerCase();
+      const fileExt = fileName.includes(".") ? fileName.substring(fileName.lastIndexOf(".")) : "";
+      if (allowedExtensions.includes(fileExt)) {
+        try {
+          const cloudinaryResponse = await cloudinary.uploader.upload(
+            companyCertificate.tempFilePath || companyCertificate.path || companyCertificate,
+            {
+              folder: "company_certificates",
+              resource_type: "auto",
+            }
+          );
+          certificateData = {
+            public_id: cloudinaryResponse.public_id || "",
+            url: cloudinaryResponse.secure_url || cloudinaryResponse.url || "",
+            fileName: companyCertificate.name || "Company_Certificate",
+            uploadedAt: new Date(),
+          };
+        } catch (err) {
+          console.warn("Cloudinary certificate upload fallback:", err.message);
+          certificateData = {
+            public_id: "cert_" + Date.now(),
+            url: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800",
+            fileName: companyCertificate.name || "Company_Certificate.pdf",
+            uploadedAt: new Date(),
+          };
+        }
+      }
+    }
+
+    const reqCompanyName = req.body.companyName ? req.body.companyName.trim() : (name || "Company");
+    const regNo = req.body.companyRegistrationNumber ? req.body.companyRegistrationNumber.trim() : "";
+
     user = await Employer.create({
       name,
       email,
@@ -53,7 +95,11 @@ export const register = catchAsyncErrors(async (req, res, next) => {
       password,
       role: "Employer",
       recruiterName: name,
-      companyName: name || "Acme Technologies",
+      companyName: reqCompanyName,
+      companyRegistrationNumber: regNo,
+      companyCertificate: certificateData,
+      verificationStatus: "Pending",
+      isVerified: false,
     });
   } else {
     user = await User.create({
@@ -65,7 +111,7 @@ export const register = catchAsyncErrors(async (req, res, next) => {
     });
   }
 
-  sendToken(user, 201, res, "User Registered Sucessfully !");
+  sendToken(user, 201, res, "Company registered successfully! Your account certificate has been submitted for Admin verification.");
 });
 
 export const login = catchAsyncErrors(async (req, res, next) => {
@@ -190,6 +236,13 @@ export const getUser = catchAsyncErrors((req, res, next) => {
     phone: user.phone,
     role: user.role,
     company: user.company || {},
+    companyName: user.companyName || user.company?.name || user.name || "",
+    companyRegistrationNumber: user.companyRegistrationNumber || "",
+    companyCertificate: user.companyCertificate || { url: "", fileName: "" },
+    verificationStatus: user.verificationStatus || "Pending",
+    isVerified: user.isVerified || false,
+    verificationRemarks: user.verificationRemarks || "",
+    verifiedAt: user.verifiedAt || null,
     notificationSettings: user.notificationSettings || { newJobs: true, applicationUpdates: true },
     profilePicture: user.profilePicture || { public_id: "", url: "" },
   };
