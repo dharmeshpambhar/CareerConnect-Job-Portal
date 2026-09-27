@@ -206,7 +206,7 @@ const Jobs = () => {
   // ── AI Match Handler ──────────────────────────────────────────────────────
   const handleAiMatch = async () => {
     if (!isAuthorized) {
-      toast.error("Please login to use AI Match Recommendations!");
+      navigate("/login");
       return;
     }
     if (user?.role !== "Job Seeker") {
