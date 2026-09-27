@@ -154,9 +154,9 @@ const Login = () => {
               )}
             </button>
 
-            {/* Footer Trust Note */}
+            {/* Footer Security Notice */}
             <div className="auth-security-footer-note">
-              <MdSecurity style={{ fontSize: "1.05rem", color: "#0ea5e9" }} />
+              <MdSecurity className="auth-security-icon" />
               <span>Authorized administrator personnel only. All access attempts are logged.</span>
             </div>
           </form>

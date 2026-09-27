@@ -931,12 +931,24 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 0.76rem;
+  font-weight: 500;
   color: #64748b;
-  margin-top: 10px;
+  margin-top: 18px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
   text-align: center;
-  line-height: 1.4;
+  line-height: 1.45;
+}
+
+.auth-security-footer-note .auth-security-icon,
+.auth-security-footer-note svg {
+  font-size: 1.15rem;
+  color: #0ea5e9;
+  flex-shrink: 0;
 }
 
 @media (max-width: 640px) {
@@ -2192,17 +2204,6 @@ select.form-input {
   border-top-color: #ffffff;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
-}
-
-.auth-security-footer-note {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.76rem;
-  color: #64748b;
-  text-align: center;
-  justify-content: center;
-  margin-top: 0.75rem;
 }
 
 @keyframes spin {
