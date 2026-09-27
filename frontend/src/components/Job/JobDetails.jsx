@@ -30,6 +30,8 @@ const JobDetails = () => {
         .finally(() => {
           setFetchingJob(false);
         });
+    } else {
+      setFetchingJob(false);
     }
   }, [isAuthorized, id]);
 
@@ -73,12 +75,16 @@ const JobDetails = () => {
     return savedJobIds.has(jobId.toString());
   };
 
-  if (isLoading || fetchingJob) {
+  if (isLoading) {
     return <div className="loading" style={{ textAlign: "center", margin: "100px auto", fontSize: "1.5rem" }}>Loading...</div>;
   }
 
   if (!isAuthorized) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
+  }
+
+  if (fetchingJob) {
+    return <div className="loading" style={{ textAlign: "center", margin: "100px auto", fontSize: "1.5rem" }}>Loading...</div>;
   }
 
   if (!job || !job._id) {

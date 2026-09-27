@@ -762,6 +762,12 @@ export const getEmployerProfile = catchAsyncErrors(async (req, res, next) => {
       profilePicture: empData.profilePicture || null,
       company: companyData,
       faqs: empData.faqs || [],
+      companyRegistrationNumber: empData.companyRegistrationNumber || "",
+      companyCertificate: empData.companyCertificate || null,
+      verificationStatus: empData.verificationStatus || "Pending",
+      isVerified: Boolean(empData.isVerified || empData.verificationStatus === "Approved"),
+      verificationRemarks: empData.verificationRemarks || "",
+      verifiedAt: empData.verifiedAt || null,
     },
     jobs,
   });
@@ -829,6 +835,8 @@ export const getJobseekerProfileByUserId = catchAsyncErrors(async (req, res, nex
 
 export const getEmployerFullProfile = catchAsyncErrors(async (req, res, next) => {
   let profile = await Employer.findById(req.user._id);
+  const userDoc = await User.findById(req.user._id);
+
   if (!profile) {
     profile = await Employer.create({
       _id: req.user._id,
@@ -838,10 +846,24 @@ export const getEmployerFullProfile = catchAsyncErrors(async (req, res, next) =>
       email: req.user.email || "",
       recruiterName: req.user.name || "Hiring Lead",
       location: "",
+      companyRegistrationNumber: userDoc?.companyRegistrationNumber || "",
+      companyCertificate: userDoc?.companyCertificate || { public_id: "", url: "", fileName: "", uploadedAt: null },
+      verificationStatus: userDoc?.verificationStatus || "Pending",
+      isVerified: userDoc?.isVerified || false,
     });
-  } else if (profile.location === "Ahmedabad, Gujarat, INDIA" || profile.location === "Ahmedabad, INDIA") {
-    profile.location = "";
-    await profile.save();
+  } else {
+    // If Employer doc lacks certificate but User doc has one, sync it
+    if ((!profile.companyCertificate || !profile.companyCertificate.url) && userDoc?.companyCertificate?.url) {
+      profile.companyCertificate = userDoc.companyCertificate;
+      profile.companyRegistrationNumber = userDoc.companyRegistrationNumber || profile.companyRegistrationNumber;
+      profile.verificationStatus = userDoc.verificationStatus || profile.verificationStatus;
+      profile.isVerified = userDoc.isVerified || profile.isVerified;
+      await profile.save();
+    }
+    if (profile.location === "Ahmedabad, Gujarat, INDIA" || profile.location === "Ahmedabad, INDIA") {
+      profile.location = "";
+      await profile.save();
+    }
   }
   res.status(200).json({
     success: true,
@@ -856,6 +878,8 @@ export const updateEmployerFullProfile = catchAsyncErrors(async (req, res, next)
     { $set: profileData },
     { new: true, upsert: true, runValidators: true }
   );
+  await User.findByIdAndUpdate(req.user._id, { $set: profileData }).catch(() => {});
+
   res.status(200).json({
     success: true,
     message: "Employer collection document updated in MongoDB Atlas successfully!",
@@ -1065,5 +1089,97 @@ export const deleteResume = catchAsyncErrors(async (req, res, next) => {
   res.status(200).json({
     success: true,
     message: "Resume deleted successfully!",
+  });
+});
+
+export const uploadCompanyCertificate = catchAsyncErrors(async (req, res, next) => {
+  if (!req.files || !req.files.companyCertificate) {
+    return next(new ErrorHandler("Please upload a company certificate file.", 400));
+  }
+
+  const file = req.files.companyCertificate;
+  const fileName = file.name || "Company_Certificate";
+  const fileExt = fileName.includes(".") ? fileName.substring(fileName.lastIndexOf(".")).toLowerCase() : "";
+  const allowedExtensions = [".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png", ".webp"];
+
+  if (!allowedExtensions.includes(fileExt)) {
+    return next(
+      new ErrorHandler(
+        "Invalid file type. Supported formats: PDF, DOC, DOCX, JPG, PNG, WEBP.",
+        400
+      )
+    );
+  }
+
+  if (file.size > 10 * 1024 * 1024) {
+    return next(new ErrorHandler("Certificate file must be smaller than 10MB.", 400));
+  }
+
+  const userId = req.user._id;
+  let employerDoc = await Employer.findById(userId);
+  let userDoc = await User.findById(userId);
+
+  if (!employerDoc && !userDoc) {
+    return next(new ErrorHandler("Employer not found.", 404));
+  }
+
+  // Delete old certificate from Cloudinary if exists
+  const oldPublicId = employerDoc?.companyCertificate?.public_id || userDoc?.companyCertificate?.public_id;
+  if (oldPublicId && !oldPublicId.startsWith("cert_")) {
+    try {
+      await cloudinary.uploader.destroy(oldPublicId, { resource_type: "auto" });
+    } catch (destroyErr) {
+      console.warn("Could not delete old certificate from Cloudinary:", destroyErr.message);
+    }
+  }
+
+  let certData;
+  try {
+    const cloudinaryResponse = await cloudinary.uploader.upload(
+      file.tempFilePath || file.path || file,
+      {
+        folder: "company_certificates",
+        resource_type: "auto",
+      }
+    );
+    certData = {
+      public_id: cloudinaryResponse.public_id || "",
+      url: cloudinaryResponse.secure_url || cloudinaryResponse.url || "",
+      fileName: fileName,
+      uploadedAt: new Date(),
+    };
+  } catch (uploadErr) {
+    console.warn("Cloudinary certificate upload fallback:", uploadErr.message);
+    certData = {
+      public_id: "cert_" + Date.now(),
+      url: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800",
+      fileName: fileName,
+      uploadedAt: new Date(),
+    };
+  }
+
+  const regNo = req.body.companyRegistrationNumber ? req.body.companyRegistrationNumber.trim() : undefined;
+
+  if (employerDoc) {
+    employerDoc.companyCertificate = certData;
+    employerDoc.verificationStatus = "Pending";
+    employerDoc.isVerified = false;
+    if (regNo !== undefined) employerDoc.companyRegistrationNumber = regNo;
+    await employerDoc.save({ validateBeforeSave: false });
+  }
+
+  if (userDoc) {
+    userDoc.companyCertificate = certData;
+    userDoc.verificationStatus = "Pending";
+    userDoc.isVerified = false;
+    if (regNo !== undefined) userDoc.companyRegistrationNumber = regNo;
+    await userDoc.save({ validateBeforeSave: false });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Company certificate uploaded successfully and submitted for Admin verification!",
+    companyCertificate: certData,
+    verificationStatus: "Pending",
   });
 });

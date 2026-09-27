@@ -17,6 +17,10 @@ import {
   HiX,
   HiOutlineTrash,
   HiOutlineClipboardList,
+  HiOutlineDocumentText,
+  HiOutlineShieldCheck,
+  HiOutlineDownload,
+  HiOutlineExternalLink,
 } from "react-icons/hi";
 import { FaCamera, FaTrash } from "react-icons/fa";
 import {
@@ -26,6 +30,7 @@ import {
   updateEmployerFullProfileApi,
   uploadProfilePictureApi,
   deleteProfilePictureApi,
+  uploadCompanyCertificateApi,
 } from "../../apiService";
 
 const COMPANY_SIZES = [
@@ -53,7 +58,9 @@ const INDUSTRIES = [
 const CompanyProfile = () => {
   const { isAuthorized, user, setUser, isLoading } = useContext(Context);
   const fileInputRef = useRef(null);
+  const certFileInputRef = useRef(null);
   const [uploadingPic, setUploadingPic] = useState(false);
+  const [uploadingCert, setUploadingCert] = useState(false);
 
   // Profile data states
   const [companyName, setCompanyName] = useState("");
@@ -66,6 +73,19 @@ const CompanyProfile = () => {
   const [description, setDescription] = useState(
     "We are a forward-thinking technology company dedicated to building innovative software solutions, building high-performing teams, and driving digital transformation."
   );
+
+  // Certificate and Verification states
+  const [companyRegistrationNumber, setCompanyRegistrationNumber] = useState("");
+  const [companyCertificate, setCompanyCertificate] = useState({
+    public_id: "",
+    url: "",
+    fileName: "",
+    uploadedAt: null,
+  });
+  const [verificationStatus, setVerificationStatus] = useState("Pending");
+  const [isVerified, setIsVerified] = useState(false);
+  const [verificationRemarks, setVerificationRemarks] = useState("");
+  const [verifiedAt, setVerifiedAt] = useState(null);
 
   // Recruiter contact details
   const [recruiterName, setRecruiterName] = useState(user?.name || "Hiring Lead");
@@ -109,6 +129,8 @@ const CompanyProfile = () => {
     contactEmail: "",
   });
 
+  const [tempRegNo, setTempRegNo] = useState("");
+
   // Load backend & localStorage data
   useEffect(() => {
     if (isAuthorized && user?.role === "Employer") {
@@ -138,6 +160,12 @@ const CompanyProfile = () => {
             if (dbProfile.contactEmail) setContactEmail(dbProfile.contactEmail);
             if (dbProfile.perks?.length) setPerks(dbProfile.perks);
             if (dbProfile.faqs?.length) setFaqs(dbProfile.faqs);
+            if (dbProfile.companyRegistrationNumber) setCompanyRegistrationNumber(dbProfile.companyRegistrationNumber);
+            if (dbProfile.companyCertificate) setCompanyCertificate(dbProfile.companyCertificate);
+            if (dbProfile.verificationStatus) setVerificationStatus(dbProfile.verificationStatus);
+            if (dbProfile.isVerified !== undefined) setIsVerified(Boolean(dbProfile.isVerified || dbProfile.verificationStatus === "Approved"));
+            if (dbProfile.verificationRemarks) setVerificationRemarks(dbProfile.verificationRemarks);
+            if (dbProfile.verifiedAt) setVerifiedAt(dbProfile.verifiedAt);
           } else {
             const storageKey = `employer_company_${user._id}`;
             const saved = localStorage.getItem(storageKey);
@@ -154,6 +182,7 @@ const CompanyProfile = () => {
               setDescription(parsed.description || user.company?.description || "We are a forward-thinking technology company...");
               setRecruiterTitle(parsed.recruiterTitle || "Talent Acquisition Lead");
               setPerks(parsed.perks || ["Competitive Salary", "Health Insurance", "Flexible Work Hours", "Work From Home / Remote"]);
+              if (parsed.companyRegistrationNumber) setCompanyRegistrationNumber(parsed.companyRegistrationNumber);
             }
           }
         })
@@ -178,6 +207,7 @@ const CompanyProfile = () => {
       contactEmail: updatedFields.contactEmail !== undefined ? updatedFields.contactEmail : contactEmail,
       perks: updatedFields.perks !== undefined ? updatedFields.perks : perks,
       faqs: updatedFields.faqs !== undefined ? updatedFields.faqs : faqs,
+      companyRegistrationNumber: updatedFields.companyRegistrationNumber !== undefined ? updatedFields.companyRegistrationNumber : companyRegistrationNumber,
     };
     localStorage.setItem(storageKey, JSON.stringify(payload));
 
@@ -239,6 +269,39 @@ const CompanyProfile = () => {
     setUploadingPic(false);
   };
 
+  const handleCertFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const allowedExtensions = [".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png", ".webp"];
+    const fileName = file.name.toLowerCase();
+    const fileExt = fileName.includes(".") ? fileName.substring(fileName.lastIndexOf(".")) : "";
+    if (!allowedExtensions.includes(fileExt)) {
+      toast.error("Invalid file format. Please upload PDF, DOC, DOCX, JPG, PNG, or WEBP.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Certificate must be less than 10MB.");
+      return;
+    }
+    setUploadingCert(true);
+    const formData = new FormData();
+    formData.append("companyCertificate", file);
+    if (tempRegNo || companyRegistrationNumber) {
+      formData.append("companyRegistrationNumber", (tempRegNo || companyRegistrationNumber).trim());
+    }
+    const result = await uploadCompanyCertificateApi(formData);
+    if (result.success) {
+      setCompanyCertificate(result.companyCertificate);
+      setVerificationStatus("Pending");
+      setIsVerified(false);
+      toast.success("Certificate uploaded! Submitted for Admin verification.");
+    } else {
+      toast.error(result.message || "Failed to upload certificate.");
+    }
+    setUploadingCert(false);
+    if (certFileInputRef.current) certFileInputRef.current.value = "";
+  };
+
   // Quick link click handler
   const handleQuickLinkClick = (sectionId, modalType) => {
     if (modalType) {
@@ -257,6 +320,8 @@ const CompanyProfile = () => {
           phone: phone,
           contactEmail: contactEmail,
         });
+      } else if (modalType === "companyCertificate") {
+        setTempRegNo(companyRegistrationNumber);
       }
       setActiveModal(modalType);
     } else {
@@ -357,6 +422,61 @@ const CompanyProfile = () => {
             <div className="profile-header-details">
               <div className="profile-name-row">
                 <h2>{companyName || "Acme Technologies"}</h2>
+                {isVerified || verificationStatus === "Approved" ? (
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      background: "#ecfdf5",
+                      color: "#059669",
+                      border: "1px solid #a7f3d0",
+                      borderRadius: "20px",
+                      padding: "2px 10px",
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                    }}
+                    title="Official Verified Company (Certificate Approved by Admin)"
+                  >
+                    ✓ Official Verified Employer
+                  </span>
+                ) : verificationStatus === "Rejected" ? (
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      background: "#fef2f2",
+                      color: "#dc2626",
+                      border: "1px solid #fecaca",
+                      borderRadius: "20px",
+                      padding: "2px 10px",
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                    }}
+                    title="Verification was rejected. Please re-upload your certificate."
+                  >
+                    ⚠ Verification Rejected
+                  </span>
+                ) : (
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      background: "#fffbeb",
+                      color: "#d97706",
+                      border: "1px solid #fde68a",
+                      borderRadius: "20px",
+                      padding: "2px 10px",
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                    }}
+                    title="Certificate submitted and awaiting Admin review"
+                  >
+                    ⏳ Verification Pending
+                  </span>
+                )}
                 <button
                   className="edit-icon-btn"
                   onClick={() => handleQuickLinkClick(null, "companyDetails")}
@@ -401,6 +521,10 @@ const CompanyProfile = () => {
                 <span>Company details</span>
                 <span className="link-action text-blue">Edit</span>
               </li>
+              <li onClick={() => handleQuickLinkClick("section-certificate", "companyCertificate")}>
+                <span>Certificate & Verification</span>
+                <span className="link-action text-blue">Manage</span>
+              </li>
               <li onClick={() => handleQuickLinkClick("section-recruiter", "recruiterContact")}>
                 <span>Contact & hiring lead</span>
                 <span className="link-action text-blue">Edit</span>
@@ -444,6 +568,187 @@ const CompanyProfile = () => {
                 <Link to="/job/me" className="modal-btn-save" style={{ textDecoration: "none", display: "inline-block" }}>
                   View Your Jobs
                 </Link>
+              </div>
+            </div>
+
+            {/* Hidden Certificate File Input */}
+            <input
+              ref={certFileInputRef}
+              type="file"
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"
+              style={{ display: "none" }}
+              onChange={handleCertFileChange}
+            />
+
+            {/* Company Certificate & Verification Section */}
+            <div id="section-certificate" className="profile-section-card">
+              <div className="section-card-header">
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <HiOutlineShieldCheck style={{ color: isVerified ? "#059669" : "#2563eb", fontSize: "1.3rem" }} />
+                  <h3>Company Certificate & Official Verification</h3>
+                </div>
+                <button className="section-edit-btn" onClick={() => handleQuickLinkClick(null, "companyCertificate")}>
+                  <HiOutlinePencil /> Edit / Upload
+                </button>
+              </div>
+
+              {/* Status Banner */}
+              <div
+                style={{
+                  background: isVerified || verificationStatus === "Approved" ? "#ecfdf5" : verificationStatus === "Rejected" ? "#fef2f2" : "#fffbeb",
+                  border: `1px solid ${isVerified || verificationStatus === "Approved" ? "#a7f3d0" : verificationStatus === "Rejected" ? "#fecaca" : "#fde68a"}`,
+                  borderRadius: "12px",
+                  padding: "14px 18px",
+                  marginBottom: "16px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: "10px",
+                }}
+              >
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontWeight: 700, fontSize: "0.95rem", color: isVerified || verificationStatus === "Approved" ? "#065f46" : verificationStatus === "Rejected" ? "#991b1b" : "#92400e" }}>
+                      {isVerified || verificationStatus === "Approved"
+                        ? "✓ Verified Company Profile"
+                        : verificationStatus === "Rejected"
+                        ? "⚠ Verification Rejected"
+                        : "⏳ Verification In Progress"}
+                    </span>
+                  </div>
+                  <p style={{ margin: "4px 0 0", fontSize: "0.85rem", color: "#475569" }}>
+                    {isVerified || verificationStatus === "Approved"
+                      ? "Your company certificate has been reviewed and verified by Administrator. Jobseekers will see the official verified badge and certificate on your public company details page."
+                      : verificationStatus === "Rejected"
+                      ? verificationRemarks || "Your certificate was not approved by the admin. Please check details and re-upload a clear government/corporate registration document."
+                      : "Your company certificate and registration number have been submitted and are currently awaiting Administrator verification."}
+                  </p>
+                </div>
+                {verifiedAt && (
+                  <span style={{ fontSize: "0.78rem", color: "#64748b", background: "rgba(255,255,255,0.7)", padding: "4px 10px", borderRadius: "8px" }}>
+                    Verified on: {new Date(verifiedAt).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
+
+              <div className="personal-details-grid">
+                <div className="personal-detail-box" onClick={() => handleQuickLinkClick(null, "companyCertificate")}>
+                  <span className="personal-detail-label">Company Registration No. (CIN / GSTIN)</span>
+                  <span className="personal-detail-value">
+                    {companyRegistrationNumber ? companyRegistrationNumber : (
+                      <span style={{ color: "#9ca3af", fontStyle: "italic" }}>Not provided — Click to add</span>
+                    )}
+                  </span>
+                </div>
+
+                <div className="personal-detail-box" style={{ gridColumn: "1 / -1" }}>
+                  <span className="personal-detail-label">Submitted Company Certificate Document</span>
+                  {companyCertificate?.url ? (
+                    <div
+                      style={{
+                        marginTop: "8px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        background: "#f8fafc",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "10px",
+                        padding: "12px 16px",
+                        flexWrap: "wrap",
+                        gap: "10px",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <div
+                          style={{
+                            width: "40px",
+                            height: "40px",
+                            borderRadius: "8px",
+                            background: "#eff6ff",
+                            color: "#2563eb",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "1.3rem",
+                          }}
+                        >
+                          <HiOutlineDocumentText />
+                        </div>
+                        <div>
+                          <p style={{ margin: 0, fontWeight: 600, fontSize: "0.92rem", color: "#0f172a" }}>
+                            {companyCertificate.fileName || "Company_Certificate.pdf"}
+                          </p>
+                          <span style={{ fontSize: "0.78rem", color: "#64748b" }}>
+                            {companyCertificate.uploadedAt
+                              ? `Uploaded on ${new Date(companyCertificate.uploadedAt).toLocaleDateString()}`
+                              : "Document uploaded"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <a
+                          href={companyCertificate.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="modal-btn-cancel"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            padding: "6px 12px",
+                            fontSize: "0.85rem",
+                            textDecoration: "none",
+                          }}
+                        >
+                          <HiOutlineExternalLink /> View Certificate
+                        </a>
+                        <button
+                          type="button"
+                          className="modal-btn-save"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            padding: "6px 12px",
+                            fontSize: "0.85rem",
+                          }}
+                          disabled={uploadingCert}
+                          onClick={() => certFileInputRef.current && certFileInputRef.current.click()}
+                        >
+                          {uploadingCert ? "Uploading..." : "Replace File"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        marginTop: "8px",
+                        padding: "14px",
+                        background: "#f8fafc",
+                        border: "1px dashed #cbd5e1",
+                        borderRadius: "10px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span style={{ fontSize: "0.88rem", color: "#64748b" }}>
+                        No certificate document uploaded yet. Upload your business license / certificate to get verified.
+                      </span>
+                      <button
+                        type="button"
+                        className="modal-btn-save"
+                        style={{ padding: "6px 14px", fontSize: "0.85rem" }}
+                        disabled={uploadingCert}
+                        onClick={() => certFileInputRef.current && certFileInputRef.current.click()}
+                      >
+                        {uploadingCert ? "Uploading..." : "Upload Certificate"}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -1032,6 +1337,116 @@ const CompanyProfile = () => {
                 + Add FAQ
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 7. MANAGE COMPANY CERTIFICATE & VERIFICATION MODAL */}
+      {activeModal === "companyCertificate" && (
+        <div className="profile-modal-overlay" onClick={() => setActiveModal(null)}>
+          <div className="profile-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header-row">
+              <h2>Company Certificate & Verification</h2>
+              <button className="modal-close-btn" onClick={() => setActiveModal(null)}>
+                <HiX />
+              </button>
+            </div>
+            <p className="modal-subtext">
+              Upload your official business license or registration certificate. Admin verifies your credentials to grant the official verified employer badge.
+            </p>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setCompanyRegistrationNumber(tempRegNo);
+                persistEmployerData({ companyRegistrationNumber: tempRegNo });
+                setActiveModal(null);
+                toast.success("Company registration details updated!");
+              }}
+            >
+              <div className="modal-form-group">
+                <label>Company Registration Number (CIN / GSTIN / Reg No)</label>
+                <input
+                  type="text"
+                  className="modal-input"
+                  placeholder="e.g. U72200MH2018PTC123456 or 27AABCV1234M1Z5"
+                  value={tempRegNo}
+                  onChange={(e) => setTempRegNo(e.target.value)}
+                />
+              </div>
+
+              {/* Upload Certificate File Area */}
+              <div className="modal-form-group">
+                <label>Company Certificate Document (PDF, JPG, PNG, DOCX - max 10MB)</label>
+                <div
+                  style={{
+                    border: "2px dashed #cbd5e1",
+                    borderRadius: "12px",
+                    padding: "20px",
+                    textAlign: "center",
+                    background: "#f8fafc",
+                    cursor: "pointer",
+                    marginTop: "6px",
+                  }}
+                  onClick={() => certFileInputRef.current && certFileInputRef.current.click()}
+                >
+                  <HiOutlineDocumentText style={{ fontSize: "2.2rem", color: "#2563eb", marginBottom: "6px" }} />
+                  {companyCertificate?.url ? (
+                    <div>
+                      <p style={{ margin: "4px 0", fontWeight: 600, color: "#0f172a" }}>
+                        Current File: {companyCertificate.fileName || "Company_Certificate.pdf"}
+                      </p>
+                      <p style={{ margin: 0, fontSize: "0.82rem", color: "#64748b" }}>
+                        Click here to replace with a new file
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p style={{ margin: "4px 0", fontWeight: 600, color: "#0f172a" }}>
+                        Click to Browse & Upload Certificate
+                      </p>
+                      <p style={{ margin: 0, fontSize: "0.82rem", color: "#64748b" }}>
+                        Supports PDF, PNG, JPG, DOC, DOCX up to 10MB
+                      </p>
+                    </div>
+                  )}
+                  {uploadingCert && (
+                    <p style={{ color: "#2563eb", fontWeight: 600, marginTop: "8px" }}>
+                      Uploading & submitting for Admin verification...
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {companyCertificate?.url && (
+                <div style={{ display: "flex", gap: "10px", marginTop: "10px", marginBottom: "16px" }}>
+                  <a
+                    href={companyCertificate.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="modal-btn-cancel"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      textDecoration: "none",
+                      fontSize: "0.85rem",
+                    }}
+                  >
+                    <HiOutlineExternalLink /> Preview Current Certificate
+                  </a>
+                </div>
+              )}
+
+              <div className="modal-actions-row">
+                <button type="button" className="modal-btn-cancel" onClick={() => setActiveModal(null)}>
+                  Close
+                </button>
+                <button type="submit" className="modal-btn-save">
+                  Save Changes
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

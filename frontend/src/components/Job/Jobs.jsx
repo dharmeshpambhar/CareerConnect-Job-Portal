@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Context } from "../../main";
 import toast from "react-hot-toast";
 import { FaBookmark, FaRegBookmark, FaRupeeSign, FaStar } from "react-icons/fa";
@@ -22,6 +22,7 @@ import { MdOutlineVerified } from "react-icons/md";
 import { fetchAllJobs, toggleWishlist, fetchWishlist, fetchAiMatchRecommendations } from "../../apiService";
 
 const Jobs = () => {
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [savedJobIds, setSavedJobIds] = useState(new Set());
   const { isAuthorized, user } = useContext(Context);
@@ -928,16 +929,32 @@ const Jobs = () => {
                 const isNew = isNewJob(element.jobPostedOn);
 
                 return (
-                  <div className="job-card-v3" key={element._id}>
+                  <div
+                    className="job-card-v3"
+                    key={element._id}
+                    onClick={() => {
+                      if (!isAuthorized) {
+                        navigate("/login");
+                      } else {
+                        navigate(`/job/${element._id}`);
+                      }
+                    }}
+                  >
                     {/* Card Top Row: Logo + Info + Actions */}
                     <div className="job-card-v3-top">
                       {/* Company Squircle Logo */}
                       <div className="job-v3-logo-wrap">
                         {getEmployerId(element) ? (
                           <Link
-                            to={`/company/view/${getEmployerId(element)}`}
+                            to={isAuthorized ? `/company/view/${getEmployerId(element)}` : "/login"}
                             className="job-v3-logo-link"
                             title={`View ${companyTitleName}'s profile`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!isAuthorized) {
+                                navigate("/login");
+                              }
+                            }}
                           >
                             <div
                               className="job-v3-company-logo"
@@ -979,19 +996,36 @@ const Jobs = () => {
                           {isNew && <span className="job-v3-new-tag">✨ New</span>}
                         </div>
                         <h2 className="job-v3-title">
-                          <Link to={`/job/${element._id}`}>{element.title}</Link>
+                          <Link to={isAuthorized ? `/job/${element._id}` : "/login"}>
+                            {element.title}
+                          </Link>
                         </h2>
                         <div className="job-v3-company-row">
                           {getEmployerId(element) ? (
                             <Link
-                              to={`/company/view/${getEmployerId(element)}`}
+                              to={isAuthorized ? `/company/view/${getEmployerId(element)}` : "/login"}
                               className="job-v3-company-link"
                               title="Click to view company profile"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (!isAuthorized) {
+                                  navigate("/login");
+                                }
+                              }}
                             >
                               <span>{companyTitleName}</span>
                             </Link>
                           ) : (
-                            <span className="job-v3-company-name">
+                            <span
+                              className="job-v3-company-name"
+                              style={{ cursor: !isAuthorized ? "pointer" : "default" }}
+                              onClick={(e) => {
+                                if (!isAuthorized) {
+                                  e.stopPropagation();
+                                  navigate("/login");
+                                }
+                              }}
+                            >
                               {companyTitleName}
                             </span>
                           )}
@@ -1026,13 +1060,19 @@ const Jobs = () => {
                         {user && user.role === "Job Seeker" && (
                           <button
                             className={`job-v3-bookmark-btn ${isWishlisted(element._id) ? "active" : ""}`}
-                            onClick={() => handleWishlistToggle(element._id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleWishlistToggle(element._id);
+                            }}
                             title={isWishlisted(element._id) ? "Remove from saved jobs" : "Save this job"}
                           >
                             {isWishlisted(element._id) ? <FaBookmark /> : <FaRegBookmark />}
                           </button>
                         )}
-                        <Link to={`/job/${element._id}`} className="job-v3-view-btn">
+                        <Link
+                          to={isAuthorized ? `/job/${element._id}` : "/login"}
+                          className="job-v3-view-btn"
+                        >
                           <span>View Role</span>
                           <FiArrowRight />
                         </Link>
@@ -1288,7 +1328,18 @@ const Jobs = () => {
                     const initial = (compName || rec.job?.category || "J").trim().charAt(0).toUpperCase();
 
                     return (
-                      <div className="ai-clean-job-card" key={rec.job._id}>
+                      <div
+                        className="ai-clean-job-card"
+                        key={rec.job._id}
+                        onClick={() => {
+                          closeAiModal();
+                          if (!isAuthorized) {
+                            navigate("/login");
+                          } else {
+                            navigate(`/job/${rec.job._id}`);
+                          }
+                        }}
+                      >
                         {/* 1. Card Top Header: Rank on Left, Match % on Right */}
                         <div className="ai-clean-card-header">
                           <div className="ai-clean-rank-pill">
@@ -1318,7 +1369,10 @@ const Jobs = () => {
                           </div>
                           <div className="ai-clean-title-group">
                             <h3 className="ai-clean-job-title">
-                              <Link to={`/job/${rec.job._id}`} onClick={closeAiModal}>
+                              <Link
+                                to={isAuthorized ? `/job/${rec.job._id}` : "/login"}
+                                onClick={() => closeAiModal()}
+                              >
                                 {rec.job.title}
                               </Link>
                             </h3>
@@ -1370,9 +1424,9 @@ const Jobs = () => {
                             {formatSalary(rec.job)}
                           </div>
                           <Link
-                            to={`/job/${rec.job._id}`}
+                            to={isAuthorized ? `/job/${rec.job._id}` : "/login"}
                             className="ai-clean-view-btn"
-                            onClick={closeAiModal}
+                            onClick={() => closeAiModal()}
                           >
                             View Role →
                           </Link>

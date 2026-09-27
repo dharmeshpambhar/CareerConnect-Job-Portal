@@ -21,6 +21,7 @@ import {
   deleteProfilePicture,
   uploadResume,
   deleteResume,
+  uploadCompanyCertificate,
 } from "../controllers/userController.js";
 import { isAuthenticated } from "../middlewares/auth.js";
 
@@ -58,6 +59,9 @@ router.delete("/profile-picture", isAuthenticated, deleteProfilePicture);
 // Resume upload & delete
 router.post("/resume", isAuthenticated, uploadResume);
 router.delete("/resume", isAuthenticated, deleteResume);
+
+// Company certificate upload
+router.post("/company-certificate", isAuthenticated, uploadCompanyCertificate);
 
 export default router;
 

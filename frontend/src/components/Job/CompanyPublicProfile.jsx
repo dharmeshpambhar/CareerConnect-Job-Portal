@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import React, { useContext, useEffect, useState } from "react";
+import { Link, useParams, useNavigate, Navigate } from "react-router-dom";
+import { Context } from "../../main";
+import toast from "react-hot-toast";
 import {
   FiArrowLeft,
   FiMapPin,
@@ -14,17 +16,24 @@ import {
   HiOutlineOfficeBuilding,
   HiOutlineSparkles,
   HiOutlineLightBulb,
+  HiOutlineShieldCheck,
+  HiOutlineDocumentText,
 } from "react-icons/hi";
 import { fetchEmployerProfile } from "../../apiService";
 
 const CompanyPublicProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAuthorized, isLoading } = useContext(Context);
   const [employer, setEmployer] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isAuthorized) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     fetchEmployerProfile(id)
       .then(({ employer: empData, jobs: jobsData, offline }) => {
@@ -37,11 +46,24 @@ const CompanyPublicProfile = () => {
       })
       .catch(() => navigate("/job/getall"))
       .finally(() => setLoading(false));
-  }, [id, navigate]);
+  }, [id, navigate, isAuthorized]);
 
   // Accordion open state — must be declared before any conditional returns (Rules of Hooks)
   const [openFaq, setOpenFaq] = useState(null);
   const toggleFaq = (i) => setOpenFaq((prev) => (prev === i ? null : i));
+
+  if (isLoading) {
+    return (
+      <div className="cpp-loading">
+        <div className="cpp-spinner" />
+        <p>Loading company profile...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return <Navigate to="/login" replace />;
+  }
 
   if (loading) {
     return (
@@ -75,6 +97,13 @@ const CompanyPublicProfile = () => {
   const recruiterTitle = c.recruiterTitle || employer.recruiterTitle || "Hiring Lead";
   // FAQs — stored flat on the employer doc (not nested under c)
   const faqs = employer.faqs || c.faqs || [];
+
+  // Certificate and verification info
+  const companyRegistrationNumber = employer.companyRegistrationNumber || c.companyRegistrationNumber || "";
+  const companyCertificate = employer.companyCertificate || c.companyCertificate || null;
+  const verificationStatus = employer.verificationStatus || c.verificationStatus || "Pending";
+  const isVerified = Boolean(employer.isVerified || verificationStatus === "Approved");
+  const verifiedAt = employer.verifiedAt || c.verifiedAt || null;
 
   const initial = companyName.charAt(0).toUpperCase();
 
@@ -136,9 +165,40 @@ const CompanyPublicProfile = () => {
               )}
             </div>
             <div className="cpp-hero-text">
-              <h1>{companyName}</h1>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                <h1 style={{ margin: 0 }}>{companyName}</h1>
+                {isVerified && (
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      background: "rgba(255,255,255,0.2)",
+                      color: "#ffffff",
+                      border: "1px solid rgba(255,255,255,0.4)",
+                      borderRadius: "20px",
+                      padding: "2px 10px",
+                      fontSize: "0.78rem",
+                      fontWeight: 700,
+                      backdropFilter: "blur(4px)",
+                    }}
+                    title="Official Verified Company (Certificate Verified by Admin)"
+                  >
+                    ✓ Verified Employer
+                  </span>
+                )}
+              </div>
               <p className="cpp-tagline">{tagline}</p>
               <div className="cpp-hero-chips">
+                {isVerified ? (
+                  <span className="cpp-chip" style={{ background: "rgba(255,255,255,0.22)", color: "#fff", borderColor: "rgba(255,255,255,0.4)", fontWeight: 700 }}>
+                    <HiOutlineShieldCheck style={{ fontSize: "1.1rem" }} /> Official Verified Company
+                  </span>
+                ) : (
+                  <span className="cpp-chip" style={{ background: "rgba(255,255,255,0.15)", color: "#fff", borderColor: "rgba(255,255,255,0.3)" }}>
+                    ⏳ Verification In Progress
+                  </span>
+                )}
                 {industry && (
                   <span className="cpp-chip">
                     <HiOutlineOfficeBuilding /> {industry}
@@ -179,7 +239,7 @@ const CompanyPublicProfile = () => {
       <div className="cpp-body">
         <div className="cpp-content-grid">
 
-          {/* LEFT: About + Perks + Contact */}
+          {/* LEFT: About + Official Certificate + Contact + Perks */}
           <div className="cpp-left-col">
 
             {/* About Section */}
@@ -218,6 +278,165 @@ const CompanyPublicProfile = () => {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Official Company Certificate & Verification Card */}
+            <div className="cpp-card cpp-verification-card">
+              <div className="cpp-card-header">
+                <HiOutlineShieldCheck
+                  className="cpp-card-icon"
+                  style={{ color: isVerified ? "#059669" : "#2563eb", fontSize: "1.3rem" }}
+                />
+                <h2>Official Company Verification & Certificate</h2>
+              </div>
+
+              {/* Verification Status Box */}
+              <div
+                style={{
+                  background: isVerified ? "#ecfdf5" : "#fffbeb",
+                  border: `1px solid ${isVerified ? "#a7f3d0" : "#fde68a"}`,
+                  borderRadius: "12px",
+                  padding: "14px 16px",
+                  marginBottom: "14px",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "6px" }}>
+                  <span
+                    style={{
+                      fontWeight: 700,
+                      fontSize: "0.92rem",
+                      color: isVerified ? "#065f46" : "#92400e",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    {isVerified ? "✓ Government & Admin Verified" : "⏳ Verification Under Review"}
+                  </span>
+                  {verifiedAt && (
+                    <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
+                      Verified on: {new Date(verifiedAt).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+                <p style={{ margin: "6px 0 0", fontSize: "0.84rem", color: "#475569", lineHeight: "1.5" }}>
+                  {isVerified
+                    ? "This employer has completed official business registration verification and submitted authentic corporate credentials validated by Job Portal Administration."
+                    : "The employer has submitted corporate registration credentials which are undergoing administrative review."}
+                </p>
+              </div>
+
+              {/* Company Registration Number */}
+              {companyRegistrationNumber && (
+                <div style={{ marginBottom: "14px", background: "#f8fafc", padding: "10px 14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                  <span style={{ display: "block", fontSize: "0.74rem", color: "#64748b", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    Company Registration No. (CIN / GSTIN)
+                  </span>
+                  <span style={{ fontSize: "0.92rem", fontWeight: 700, color: "#0f172a" }}>
+                    {companyRegistrationNumber}
+                  </span>
+                </div>
+              )}
+
+              {/* Submitted Company Certificate Document Preview & Download */}
+              {companyCertificate?.url ? (
+                <div
+                  style={{
+                    background: "#ffffff",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "12px",
+                    padding: "14px 16px",
+                    boxShadow: "0 2px 8px rgba(15, 23, 42, 0.04)",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+                    <div
+                      style={{
+                        width: "42px",
+                        height: "42px",
+                        borderRadius: "10px",
+                        background: "#eff6ff",
+                        color: "#2563eb",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "1.4rem",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <HiOutlineDocumentText />
+                    </div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <p
+                        style={{
+                          margin: 0,
+                          fontWeight: 600,
+                          fontSize: "0.92rem",
+                          color: "#0f172a",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {companyCertificate.fileName || "Company_Registration_Certificate.pdf"}
+                      </p>
+                      <span style={{ fontSize: "0.76rem", color: "#64748b" }}>
+                        Official Corporate Document • Verified Authentic
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                    <a
+                      href={companyCertificate.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        flex: 1,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "6px",
+                        background: "#2563eb",
+                        color: "#ffffff",
+                        padding: "8px 14px",
+                        borderRadius: "8px",
+                        fontSize: "0.85rem",
+                        fontWeight: 600,
+                        textDecoration: "none",
+                      }}
+                    >
+                      <FiGlobe style={{ fontSize: "0.95rem" }} /> View Certificate ↗
+                    </a>
+                    <a
+                      href={companyCertificate.url}
+                      download={companyCertificate.fileName || "Company_Certificate"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "6px",
+                        background: "#f1f5f9",
+                        color: "#334155",
+                        padding: "8px 14px",
+                        borderRadius: "8px",
+                        fontSize: "0.85rem",
+                        fontWeight: 600,
+                        textDecoration: "none",
+                        border: "1px solid #cbd5e1",
+                      }}
+                    >
+                      Download Document
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ background: "#f8fafc", padding: "12px 14px", borderRadius: "10px", border: "1px dashed #cbd5e1", fontSize: "0.85rem", color: "#64748b" }}>
+                  📄 Business credentials submitted and validated by system administration.
+                </div>
+              )}
             </div>
 
             {/* Contact Card (2nd position) */}
@@ -318,7 +537,11 @@ const CompanyPublicProfile = () => {
               ) : (
                 <div className="cpp-jobs-list">
                   {jobs.map((job) => (
-                    <Link to={`/job/${job._id}`} key={job._id} className="cpp-job-card">
+                    <Link
+                      to={isAuthorized ? `/job/${job._id}` : "/login"}
+                      key={job._id}
+                      className="cpp-job-card"
+                    >
                       <div className="cpp-job-top">
                         <div>
                           <h3 className="cpp-job-title">{job.title}</h3>

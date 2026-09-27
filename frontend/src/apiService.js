@@ -317,6 +317,30 @@ export const updateEmployerFullProfileApi = async (profileData) => {
   }
 };
 
+export const uploadCompanyCertificateApi = async (formData) => {
+  clearCache("employer_full_profile");
+  try {
+    const { data } = await axios.post(`${API_URL}/user/company-certificate`, formData, {
+      withCredentials: true,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return {
+      success: true,
+      message: data.message,
+      companyCertificate: data.companyCertificate,
+      verificationStatus: data.verificationStatus,
+      offline: false,
+    };
+  } catch (error) {
+    console.error("uploadCompanyCertificateApi error:", error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to upload company certificate",
+      offline: true,
+    };
+  }
+};
+
 export const fetchNotificationsApi = async () => {
   try {
     const { data } = await axios.get(`${API_URL}/user/notifications`, {
