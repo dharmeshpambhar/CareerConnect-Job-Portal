@@ -107,24 +107,6 @@ const CompanyPublicProfile = () => {
 
   const initial = companyName.charAt(0).toUpperCase();
 
-  // getColor and other derived values
-
-  const getColor = (name) => {
-    const palette = [
-      ["#1e40af", "#3b82f6"],
-      ["#065f46", "#10b981"],
-      ["#7c2d12", "#f97316"],
-      ["#4c1d95", "#8b5cf6"],
-      ["#831843", "#ec4899"],
-      ["#164e63", "#0ea5e9"],
-    ];
-    let sum = 0;
-    for (let i = 0; i < name.length; i++) sum += name.charCodeAt(i);
-    return palette[sum % palette.length];
-  };
-
-  const [darkColor, lightColor] = getColor(companyName);
-
   const formatSalary = (job) => {
     if (job.fixedSalary) return `₹${job.fixedSalary.toLocaleString("en-IN")}`;
     if (job.salaryFrom && job.salaryTo)
@@ -143,44 +125,39 @@ const CompanyPublicProfile = () => {
   return (
     <section className="cpp-page">
       {/* ── Hero Banner ── */}
-      <div
-        className="cpp-hero"
-        style={{ background: `linear-gradient(135deg, ${darkColor} 0%, ${lightColor} 100%)` }}
-      >
+      <div className="cpp-hero">
         <div className="cpp-hero-inner">
           <Link to="/job/getall" className="cpp-back-btn">
             <FiArrowLeft /> Back to Jobs
           </Link>
 
           <div className="cpp-hero-body">
-            <div className="cpp-hero-logo" style={{ background: `rgba(255,255,255,0.15)`, border: `2px solid rgba(255,255,255,0.3)`, overflow: "hidden" }}>
+            <div className={`cpp-hero-logo ${!employer?.profilePicture?.url ? "no-img" : ""}`}>
               {employer?.profilePicture?.url ? (
                 <img
                   src={employer?.profilePicture?.url}
                   alt={companyName}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
               ) : (
                 initial
               )}
             </div>
             <div className="cpp-hero-text">
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", marginBottom: "4px" }}>
                 <h1 style={{ margin: 0 }}>{companyName}</h1>
                 {isVerified && (
                   <span
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
-                      gap: "4px",
-                      background: "rgba(255,255,255,0.2)",
-                      color: "#ffffff",
-                      border: "1px solid rgba(255,255,255,0.4)",
+                      gap: "5px",
+                      background: "#ecfdf5",
+                      color: "#047857",
+                      border: "1px solid #a7f3d0",
                       borderRadius: "20px",
-                      padding: "2px 10px",
+                      padding: "3px 12px",
                       fontSize: "0.78rem",
                       fontWeight: 700,
-                      backdropFilter: "blur(4px)",
                     }}
                     title="Official Verified Company (Certificate Verified by Admin)"
                   >
@@ -191,11 +168,11 @@ const CompanyPublicProfile = () => {
               <p className="cpp-tagline">{tagline}</p>
               <div className="cpp-hero-chips">
                 {isVerified ? (
-                  <span className="cpp-chip" style={{ background: "rgba(255,255,255,0.22)", color: "#fff", borderColor: "rgba(255,255,255,0.4)", fontWeight: 700 }}>
+                  <span className="cpp-chip cpp-chip-verified">
                     <HiOutlineShieldCheck style={{ fontSize: "1.1rem" }} /> Official Verified Company
                   </span>
                 ) : (
-                  <span className="cpp-chip" style={{ background: "rgba(255,255,255,0.15)", color: "#fff", borderColor: "rgba(255,255,255,0.3)" }}>
+                  <span className="cpp-chip">
                     ⏳ Verification In Progress
                   </span>
                 )}
@@ -446,11 +423,16 @@ const CompanyPublicProfile = () => {
                 <h2>Hiring Contact</h2>
               </div>
               <div className="cpp-contact-row">
-                <div
-                  className="cpp-contact-avatar"
-                  style={{ background: `linear-gradient(135deg, ${darkColor}, ${lightColor})` }}
-                >
-                  {employer.name?.charAt(0).toUpperCase() || "H"}
+                <div className={`cpp-contact-avatar ${!employer?.profilePicture?.url ? "no-img" : ""}`}>
+                  {employer?.profilePicture?.url ? (
+                    <img
+                      src={employer.profilePicture.url}
+                      alt={companyName || employer.name}
+                      className="cpp-contact-avatar-img"
+                    />
+                  ) : (
+                    employer.name?.charAt(0).toUpperCase() || "H"
+                  )}
                 </div>
                 <div>
                   <p className="cpp-contact-name">{employer.name}</p>

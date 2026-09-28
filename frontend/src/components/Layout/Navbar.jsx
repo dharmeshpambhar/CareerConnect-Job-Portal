@@ -63,7 +63,9 @@ const Navbar = () => {
       <nav className="navbarShow">
         <div className="container">
           <div className="logo">
-            <img src="/careerconnect-white.png" alt="logo" />
+            <Link to={"/"} onClick={() => setShow(false)}>
+              <img src="/careerconnect-white.png" alt="logo" />
+            </Link>
           </div>
           <ul className={!show ? "menu" : "show-menu menu"}>
             <li>

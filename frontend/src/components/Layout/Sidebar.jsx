@@ -218,7 +218,7 @@ const Sidebar = ({ isOpen, onClose }) => {
             </div>
 
             {/* 2. Upgrade to CareerConnect Pro Banner */}
-            <div className="naukri-pro-banner" onClick={() => toast.success("Pro Membership active!")}>
+            <div className="naukri-pro-banner" onClick={() => toast.error("This feature is not active currently.")}>
               <div className="naukri-pro-left">
                 <span className="naukri-crown-icon">👑</span>
                 <span className="naukri-pro-title">Upgrade to CareerConnect Pro</span>

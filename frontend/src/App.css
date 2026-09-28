@@ -4235,10 +4235,19 @@ nav .container .logo {
   height: 90px;
 }
 
+nav .container .logo a {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
 nav .container .logo img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  cursor: pointer;
 }
 
 nav .menu {
@@ -13665,67 +13674,97 @@ input:checked+.naukri-slider:before {
 /* ── Hero ─────────────────────────────────────────────────────────────────── */
 .cpp-page {
   min-height: 100vh;
-  background: #f1f5f9;
+  background: #f8fafc;
 }
 
 .cpp-hero {
-  padding: 0;
+  position: relative;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.03);
 }
 
 .cpp-hero-inner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 32px 24px 40px;
+  padding: 32px 24px 36px;
 }
 
 .cpp-back-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: rgba(255, 255, 255, 0.85);
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 6px 14px;
+  border-radius: 20px;
   text-decoration: none;
-  font-size: 0.88rem;
-  font-weight: 500;
-  margin-bottom: 28px;
-  transition: color 0.2s;
+  font-size: 0.84rem;
+  font-weight: 600;
+  margin-bottom: 22px;
+  transition: all 0.2s ease;
 }
 
 .cpp-back-btn:hover {
-  color: #fff;
+  color: #2563eb;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  transform: translateX(-2px);
 }
 
 .cpp-hero-body {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 24px;
 }
 
 .cpp-hero-logo {
   width: 90px;
   height: 90px;
-  border-radius: 20px;
+  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.4rem;
+  font-size: 2.2rem;
   font-weight: 800;
   color: #fff;
   flex-shrink: 0;
-  backdrop-filter: blur(10px);
+  background: #ffffff !important;
+  border: 1.5px solid #e2e8f0 !important;
+  box-shadow: 0 6px 20px -4px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+  padding: 6px;
+}
+
+.cpp-hero-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+.cpp-hero-logo.no-img {
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%) !important;
+  color: #ffffff;
 }
 
 .cpp-hero-text h1 {
+  font-family: "Outfit", sans-serif;
   font-size: 2rem;
   font-weight: 800;
-  color: #fff;
-  margin: 0 0 6px;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.02em;
   line-height: 1.2;
 }
 
 .cpp-tagline {
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 0.97rem;
-  margin: 0 0 16px;
+  color: #64748b;
+  font-size: 0.95rem;
+  font-weight: 400;
+  margin: 4px 0 14px;
+  line-height: 1.5;
 }
 
 .cpp-hero-chips {
@@ -13737,25 +13776,43 @@ input:checked+.naukri-slider:before {
 .cpp-chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  background: rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  gap: 6px;
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
   padding: 5px 12px;
   border-radius: 20px;
   font-size: 0.82rem;
   font-weight: 500;
-  backdrop-filter: blur(6px);
+  transition: all 0.2s ease;
+}
+
+.cpp-chip:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.cpp-chip-verified {
+  background: #ecfdf5 !important;
+  color: #047857 !important;
+  border-color: #a7f3d0 !important;
+  font-weight: 600 !important;
 }
 
 .cpp-chip-link {
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  border-color: #bfdbfe !important;
   text-decoration: none;
   cursor: pointer;
-  transition: background 0.2s;
+  font-weight: 600;
 }
 
 .cpp-chip-link:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #2563eb !important;
+  transform: translateY(-1px);
 }
 
 /* ── Body ─────────────────────────────────────────────────────────────────── */
@@ -13908,8 +13965,8 @@ input:checked+.naukri-slider:before {
 }
 
 .cpp-contact-avatar {
-  width: 50px;
-  height: 50px;
+  width: 52px;
+  height: 52px;
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -13917,7 +13974,25 @@ input:checked+.naukri-slider:before {
   font-size: 1.3rem;
   font-weight: 800;
   color: #fff;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
   flex-shrink: 0;
+  overflow: hidden;
+  padding: 4px;
+}
+
+.cpp-contact-avatar.no-img {
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  border: none;
+  padding: 0;
+}
+
+.cpp-contact-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 10px;
 }
 
 .cpp-contact-name {

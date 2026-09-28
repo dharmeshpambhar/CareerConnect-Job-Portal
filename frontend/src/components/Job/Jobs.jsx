@@ -993,7 +993,7 @@ const Jobs = () => {
                       <div className="job-card-v3-info">
                         <div className="job-v3-badges-row">
                           <span className="job-v3-cat-tag">{element.category || "Engineering"}</span>
-                          {isNew && <span className="job-v3-new-tag">✨ New</span>}
+                          {isNew && <span className="job-v3-new-tag">New</span>}
                         </div>
                         <h2 className="job-v3-title">
                           <Link to={isAuthorized ? `/job/${element._id}` : "/login"}>
