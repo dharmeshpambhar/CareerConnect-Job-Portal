@@ -248,7 +248,7 @@ export const getMyJobs = catchAsyncErrors(async (req, res, next) => {
       new ErrorHandler("Job Seeker not allowed to access this resource.", 400)
     );
   }
-  const rawJobs = await Job.find({ postedBy: req.user._id }).sort({ jobPostedOn: -1 });
+  const rawJobs = await Job.find({ postedBy: req.user._id }).sort({ jobPostedOn: -1 }).lean();
   const myJobs = await populateJobsWithCompanyDetails(rawJobs);
   res.status(200).json({
     success: true,
@@ -308,12 +308,14 @@ export const deleteJob = catchAsyncErrors(async (req, res, next) => {
 export const getSingleJob = catchAsyncErrors(async (req, res, next) => {
   const { id } = req.params;
   try {
-    const rawJob = await Job.findById(id);
+    const rawJob = await Job.findById(id).lean();
     if (!rawJob) {
       return next(new ErrorHandler("Job not found.", 404));
     }
-    const job = await populateJobsWithCompanyDetails(rawJob);
-    const appliedCount = await Application.countDocuments({ jobId: rawJob._id });
+    const [job, appliedCount] = await Promise.all([
+      populateJobsWithCompanyDetails(rawJob),
+      Application.countDocuments({ jobId: rawJob._id }),
+    ]);
     res.status(200).json({
       success: true,
       job: { ...job, appliedCount, vacancies: job.vacancies ?? 1 },

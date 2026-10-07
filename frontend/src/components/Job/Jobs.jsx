@@ -17,13 +17,18 @@ import {
   FiArrowRight,
   FiTrendingUp,
   FiCheck,
+  FiChevronLeft,
+  FiChevronRight,
 } from "react-icons/fi";
 import { MdOutlineVerified } from "react-icons/md";
-import { fetchAllJobs, toggleWishlist, fetchWishlist, fetchAiMatchRecommendations } from "../../apiService";
+import { fetchAllJobs, toggleWishlist, fetchWishlist, fetchAiMatchRecommendations, getCached } from "../../apiService";
 
 const Jobs = () => {
   const navigate = useNavigate();
-  const [jobs, setJobs] = useState([]);
+  const [jobs, setJobs] = useState(() => {
+    const cached = getCached("all_jobs", 60000);
+    return (cached && Array.isArray(cached.jobs)) ? cached.jobs : [];
+  });
   const [savedJobIds, setSavedJobIds] = useState(new Set());
   const { isAuthorized, user } = useContext(Context);
   const [searchParams] = useSearchParams();
@@ -586,6 +591,56 @@ const Jobs = () => {
     return diffDays <= 7;
   };
 
+  // Pagination State & Logic
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    searchQuery,
+    selectedCategory,
+    selectedLocation,
+    selectedExperience,
+    selectedJobType,
+    selectedSalary,
+    selectedDatePosted,
+    selectedSort,
+  ]);
+
+  const totalJobsCount = filteredJobs.length;
+  const totalPages = Math.ceil(totalJobsCount / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalJobsCount);
+  const paginatedJobs = filteredJobs.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (newPage) => {
+    if (newPage < 1 || newPage > totalPages || newPage === currentPage) return;
+    setCurrentPage(newPage);
+    const listElem = document.querySelector(".jobs-v3-layout");
+    if (listElem) {
+      listElem.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      window.scrollTo({ top: 350, behavior: "smooth" });
+    }
+  };
+
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages.push(1, 2, 3, 4, "...", totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1, "...", totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
+      }
+    }
+    return pages;
+  };
+
   return (
     <section className="jobs-page-v3">
       {/* Ambient background glow accents */}
@@ -913,8 +968,9 @@ const Jobs = () => {
 
           {/* Right Main Job Cards Column */}
           <main className="jobs-v3-list">
-            {filteredJobs.length > 0 ? (
-              filteredJobs.map((element) => {
+            {paginatedJobs.length > 0 ? (
+              <>
+                {paginatedJobs.map((element) => {
                 const experience = element.experience || deriveExperience(element._id);
                 const jobType = element.jobType || deriveJobType(element._id);
                 const skills =
@@ -1125,8 +1181,56 @@ const Jobs = () => {
                     </div>
                   </div>
                 );
-              })
-            ) : (
+              })}
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="jobs-v3-pagination">
+                  <div className="jobs-v3-page-info">
+                    Showing <strong>{startIndex + 1}</strong> – <strong>{endIndex}</strong> of <strong>{totalJobsCount}</strong> jobs
+                  </div>
+
+                  <div className="jobs-v3-page-nav">
+                    <button
+                      className="jobs-v3-page-btn prev"
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      title="Previous Page"
+                    >
+                      <FiChevronLeft /> Prev
+                    </button>
+
+                    <div className="jobs-v3-page-numbers">
+                      {getPageNumbers().map((page, idx) =>
+                        page === "..." ? (
+                          <span key={`ellipsis-${idx}`} className="jobs-v3-page-ellipsis">
+                            ...
+                          </span>
+                        ) : (
+                          <button
+                            key={page}
+                            className={`jobs-v3-page-number ${currentPage === page ? "active" : ""}`}
+                            onClick={() => handlePageChange(page)}
+                          >
+                            {page}
+                          </button>
+                        )
+                      )}
+                    </div>
+
+                    <button
+                      className="jobs-v3-page-btn next"
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      title="Next Page"
+                    >
+                      Next <FiChevronRight />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
               <div className="jobs-v3-empty-state">
                 <div className="jobs-v3-empty-icon">
                   <FiSearch />

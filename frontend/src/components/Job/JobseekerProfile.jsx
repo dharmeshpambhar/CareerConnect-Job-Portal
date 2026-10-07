@@ -196,11 +196,11 @@ const JobseekerProfile = () => {
     );
   };
 
-  if (isLoading) {
+  if (isLoading && !user?._id) {
     return <div className="loading">Loading Profile...</div>;
   }
 
-  if (!isAuthorized) {
+  if (!isAuthorized && !isLoading) {
     return <Navigate to="/login" />;
   }
 

@@ -19,6 +19,10 @@ import {
   FaTimes,
   FaGlobe,
   FaMapMarkerAlt,
+  FaPhone,
+  FaEnvelope,
+  FaIdCard,
+  FaStickyNote,
 } from "react-icons/fa";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api/v1";
@@ -78,7 +82,6 @@ const CompanyVerifications = () => {
       );
       toast.success(data.message || `Company verification updated to ${status}!`);
 
-      // Update local state
       setCompanies((prev) =>
         prev.map((c) =>
           c._id === selectedCompany._id
@@ -119,12 +122,9 @@ const CompanyVerifications = () => {
 
   const getBadgeClass = (status) => {
     switch (status) {
-      case "Approved":
-        return "active";
-      case "Rejected":
-        return "blacklisted";
-      default:
-        return "pending";
+      case "Approved": return "active";
+      case "Rejected": return "blacklisted";
+      default: return "pending";
     }
   };
 
@@ -136,7 +136,7 @@ const CompanyVerifications = () => {
         Audit employer registration certificates and authenticate official company accounts to protect job seekers.
       </p>
 
-      {/* Stats Cards — matching FraudReports & Dashboard design */}
+      {/* Stats Cards */}
       <div className="stats-grid">
         <div className="glass-panel stat-card">
           <div className="stat-header">
@@ -261,9 +261,7 @@ const CompanyVerifications = () => {
                       </td>
                       <td>
                         <div style={{ display: "flex", flexDirection: "column" }}>
-                          <span style={{ fontWeight: 600, color: "var(--text-main)", fontSize: "0.85rem" }}>
-                            {c.email}
-                          </span>
+                          <span style={{ fontWeight: 600, color: "var(--text-main)", fontSize: "0.85rem" }}>{c.email}</span>
                           <span style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: "2px" }}>
                             📞 {c.phone || "N/A"}
                           </span>
@@ -323,99 +321,160 @@ const CompanyVerifications = () => {
         </div>
       )}
 
-      {/* ── Inspection & Audit Glass Modal (Matches FraudReports Modal) ── */}
+      {/* ── Premium Verification Audit Modal ── */}
       {selectedCompany && (
         <div className="modal-overlay" onClick={() => setSelectedCompany(null)}>
           <div
             className="modal-content glass-panel"
-            style={{ maxWidth: "640px" }}
+            style={{ maxWidth: "660px" }}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Header */}
             <div className="modal-header">
-              <h3 className="modal-title">Company Verification Audit</h3>
-              <button onClick={() => setSelectedCompany(null)} className="btn-close">
+              <div className="modal-title">
+                <span className="modal-title-icon">
+                  <FaShieldAlt />
+                </span>
+                Company Verification Audit
+              </div>
+              <button onClick={() => setSelectedCompany(null)} className="btn-close" title="Close">
                 <RxCross2 />
               </button>
             </div>
 
-            <div style={{ maxHeight: "70vh", overflowY: "auto", paddingRight: "0.5rem" }}>
-              {/* Company & Recruiter Details */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
-                <div className="detail-item">
-                  <div className="detail-label">Company Name</div>
-                  <div className="detail-value">{selectedCompany.companyName}</div>
-                  <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>
-                    Recruiter: {selectedCompany.name}
-                  </div>
+            {/* Company hero identity card */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: "1rem",
+              padding: "1.15rem 1.75rem",
+              background: "linear-gradient(135deg, rgba(99,102,241,0.04), rgba(6,182,212,0.02))",
+              borderBottom: "1px solid rgba(99,102,241,0.08)"
+            }}>
+              <div style={{
+                width: 52, height: 52, borderRadius: 14,
+                background: "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(6,182,212,0.1))",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "1.6rem", flexShrink: 0,
+                border: "1px solid rgba(99,102,241,0.15)"
+              }}>
+                🏢
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 800, fontSize: "1rem", color: "var(--text-main)" }}>
+                  {selectedCompany.companyName}
+                  {selectedCompany.isVerified && (
+                    <span style={{ marginLeft: 8, color: "#10b981", fontSize: "0.85rem" }}>✓ Verified</span>
+                  )}
                 </div>
-                <div className="detail-item">
-                  <div className="detail-label">Govt Registration / CIN</div>
-                  <div className="detail-value" style={{ fontFamily: "monospace" }}>
-                    {selectedCompany.companyRegistrationNumber || "Not Provided"}
+                <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                  Recruiter: {selectedCompany.name} · {selectedCompany.email}
+                </div>
+              </div>
+              <span className={`badge ${getBadgeClass(selectedCompany.verificationStatus)}`} style={{ margin: 0, flexShrink: 0 }}>
+                {selectedCompany.verificationStatus}
+              </span>
+            </div>
+
+            {/* Scrollable body */}
+            <div className="modal-scroll" style={{ padding: "1.5rem 1.75rem" }}>
+
+              {/* Company & Registration Details */}
+              <div className="modal-section">
+                <div className="modal-section-title">
+                  <FaBuilding /> Company & Registration
+                </div>
+                <div className="modal-info-grid">
+                  <div className="info-chip">
+                    <span className="info-chip-label"><FaBuilding style={{ display: "inline", marginRight: 3 }} />Company Name</span>
+                    <span className="info-chip-value">{selectedCompany.companyName}</span>
+                    <span style={{ fontSize: "0.74rem", color: "var(--text-muted)", marginTop: 2 }}>
+                      Recruiter: {selectedCompany.name}
+                    </span>
                   </div>
-                  <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>
-                    {selectedCompany.email}
+                  <div className="info-chip">
+                    <span className="info-chip-label"><FaIdCard style={{ display: "inline", marginRight: 3 }} />Govt Registration / CIN</span>
+                    <span className="info-chip-value mono">
+                      {selectedCompany.companyRegistrationNumber || "Not Provided"}
+                    </span>
+                    <span style={{ fontSize: "0.74rem", color: "var(--text-muted)", marginTop: 2 }}>
+                      {selectedCompany.email}
+                    </span>
+                  </div>
+                  <div className="info-chip">
+                    <span className="info-chip-label"><FaPhone style={{ display: "inline", marginRight: 3 }} />Phone & Contact</span>
+                    <span className="info-chip-value">📞 {selectedCompany.phone || "N/A"}</span>
+                  </div>
+                  <div className="info-chip">
+                    <span className="info-chip-label"><FaGlobe style={{ display: "inline", marginRight: 3 }} />Website / Location</span>
+                    <span className="info-chip-value">
+                      {selectedCompany.website ? (
+                        <a
+                          href={selectedCompany.website.startsWith("http") ? selectedCompany.website : `https://${selectedCompany.website}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ color: "var(--primary-accent)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}
+                        >
+                          <FaGlobe style={{ fontSize: "0.8rem" }} /> {selectedCompany.website}
+                        </a>
+                      ) : selectedCompany.location ? (
+                        <span><FaMapMarkerAlt style={{ color: "var(--text-muted)", marginRight: 4 }} />{selectedCompany.location}</span>
+                      ) : (
+                        <span className="info-chip-value muted">N/A</span>
+                      )}
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* Contact & Web Info */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
-                <div className="detail-item">
-                  <div className="detail-label">Phone & Contact</div>
-                  <div className="detail-value">📞 {selectedCompany.phone || "N/A"}</div>
+              {/* Certificate Document */}
+              <div className="modal-section">
+                <div className="modal-section-title">
+                  <FaFileAlt /> Submitted Company Certificate / License
                 </div>
-                <div className="detail-item">
-                  <div className="detail-label">Website / Location</div>
-                  <div className="detail-value">
-                    {selectedCompany.website ? (
-                      <a
-                        href={selectedCompany.website.startsWith("http") ? selectedCompany.website : `https://${selectedCompany.website}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{ color: "var(--primary-accent)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}
-                      >
-                        <FaGlobe style={{ fontSize: "0.8rem" }} /> {selectedCompany.website}
-                      </a>
-                    ) : selectedCompany.location ? (
-                      <span><FaMapMarkerAlt style={{ color: "var(--text-muted)", marginRight: "4px" }} /> {selectedCompany.location}</span>
-                    ) : (
-                      "N/A"
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Submitted Certificate Document */}
-              <div className="detail-item" style={{ marginBottom: "1rem" }}>
-                <div className="detail-label">Submitted Company Certificate / License</div>
                 {selectedCompany.companyCertificate && selectedCompany.companyCertificate.url ? (
-                  <div className="fraud-modal-evidence-box">
-                    <a
-                      href={selectedCompany.companyCertificate.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-evidence-link"
-                    >
-                      <FaFileAlt /> View Uploaded Registration Certificate{" "}
-                      <FaExternalLinkAlt style={{ fontSize: "0.75rem", marginLeft: "4px" }} />
-                    </a>
+                  <>
+                    <div className="cv-card" style={{ borderColor: "rgba(16,185,129,0.3)", background: "rgba(16,185,129,0.04)" }}>
+                      <div className="cv-card-icon" style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.2), rgba(5,150,105,0.1))", fontSize: "1.6rem" }}>
+                        📜
+                      </div>
+                      <div className="cv-card-info">
+                        <div className="cv-card-title">
+                          {selectedCompany.companyCertificate.fileName || "Registration Certificate"}
+                        </div>
+                        <div className="cv-card-subtitle">Business License / Govt Registration Document</div>
+                      </div>
+                      <a
+                        href={selectedCompany.companyCertificate.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="cv-card-btn"
+                        style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "#fff", boxShadow: "0 4px 12px rgba(16,185,129,0.3)" }}
+                      >
+                        <FaExternalLinkAlt style={{ fontSize: "0.7rem" }} /> View
+                      </a>
+                    </div>
                     {selectedCompany.companyCertificate.url.match(/\.(jpeg|jpg|png|webp)/i) && (
-                      <div className="evidence-modal-thumb">
+                      <div className="evidence-modal-thumb" style={{ marginTop: "0.75rem" }}>
                         <img src={selectedCompany.companyCertificate.url} alt="Registration Certificate" />
                       </div>
                     )}
-                  </div>
+                  </>
                 ) : (
-                  <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontStyle: "italic" }}>
+                  <div style={{
+                    padding: "1rem", borderRadius: 10,
+                    background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.12)",
+                    fontSize: "0.86rem", color: "#b91c1c", display: "flex", alignItems: "center", gap: 8
+                  }}>
                     ⚠️ No certificate document was attached during registration.
                   </div>
                 )}
               </div>
 
-              {/* Administrator Audit Remarks */}
-              <div className="detail-item" style={{ marginBottom: "1rem" }}>
-                <div className="detail-label">Administrator Audit Remarks (Visible to Company)</div>
+              {/* Admin Remarks */}
+              <div className="modal-section">
+                <div className="modal-section-title">
+                  <FaStickyNote /> Administrator Audit Remarks
+                  <span style={{ fontWeight: 400, color: "var(--text-muted)", fontSize: "0.7rem", marginLeft: 4 }}>(visible to company)</span>
+                </div>
                 <textarea
                   className="admin-case-notes"
                   rows={3}
@@ -423,24 +482,15 @@ const CompanyVerifications = () => {
                   value={remarks}
                   onChange={(e) => setRemarks(e.target.value)}
                 />
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0.5rem 0" }}>
-                <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
-                  Current Status:{" "}
-                  <span className={`badge ${getBadgeClass(selectedCompany.verificationStatus)}`}>
-                    {selectedCompany.verificationStatus}
-                  </span>
-                </span>
                 {selectedCompany.verifiedAt && (
-                  <span style={{ fontSize: "0.8rem", color: "var(--primary-accent)", fontStyle: "italic" }}>
-                    Verified On: {new Date(selectedCompany.verifiedAt).toLocaleDateString()}
-                  </span>
+                  <div style={{ fontSize: "0.78rem", color: "var(--primary-accent)", marginTop: 6, fontStyle: "italic" }}>
+                    Last verified: {new Date(selectedCompany.verifiedAt).toLocaleDateString()}
+                  </div>
                 )}
               </div>
             </div>
 
-            {/* Moderation Actions Footer (Matches FraudReports Modal Footer) */}
+            {/* Moderation Actions Footer */}
             <div className="fraud-modal-footer">
               <button
                 type="button"
@@ -464,7 +514,7 @@ const CompanyVerifications = () => {
                 disabled={actionLoading}
                 onClick={() => handleVerify("Rejected")}
               >
-                <FaTimesCircle /> Reject Company
+                <FaTimesCircle /> Reject
               </button>
               <button
                 type="button"

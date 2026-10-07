@@ -24,19 +24,26 @@ import {
   deleteApplication,
   fetchWishlist,
   updateApplicationStatus,
+  getCached,
 } from "../../apiService";
 
 const MyApplications = () => {
-  const [applications, setApplications] = useState([]);
+  const { isAuthorized, user, isLoading } = useContext(Context);
+  const [applications, setApplications] = useState(() => {
+    const cached = getCached(`applications_${user?.role}`, 60000);
+    return cached && Array.isArray(cached.applications) ? cached.applications : [];
+  });
   const [modalOpen, setModalOpen] = useState(false);
   const [resumeImageUrl, setResumeImageUrl] = useState("");
   const [resumeTitle, setResumeTitle] = useState("Resume");
-  const [wishlist, setWishlist] = useState([]);
+  const [wishlist, setWishlist] = useState(() => {
+    const cached = getCached("user_wishlist", 60000);
+    return cached && Array.isArray(cached.wishlist) ? cached.wishlist : [];
+  });
   const [updatingId, setUpdatingId] = useState(null);
   const [selectedCandidateApp, setSelectedCandidateApp] = useState(null);
   const [reportingApplication, setReportingApplication] = useState(null);
 
-  const { isAuthorized, user, isLoading } = useContext(Context);
   const navigateTo = useNavigate();
 
   useEffect(() => {
@@ -54,7 +61,7 @@ const MyApplications = () => {
     });
   }, [isAuthorized, user]);
 
-  if (isLoading) {
+  if (isLoading && !user?._id) {
     return (
       <div className="appDash-loading">
         <div className="appDash-loading-spinner"></div>

@@ -17152,3 +17152,117 @@ input:checked+.naukri-slider:before {
   border: 1px solid #e2e8f0;
   box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
+
+/* ── All Jobs Pagination ─────────────────────────────────────────────────── */
+.jobs-v3-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px 24px;
+  margin-top: 24px;
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.04);
+}
+
+.jobs-v3-page-info {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.jobs-v3-page-info strong {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.jobs-v3-page-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.jobs-v3-page-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.jobs-v3-page-btn:hover:not(:disabled) {
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #bfdbfe;
+}
+
+.jobs-v3-page-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #f1f5f9;
+}
+
+.jobs-v3-page-numbers {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.jobs-v3-page-number {
+  min-width: 38px;
+  height: 38px;
+  padding: 0 8px;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.jobs-v3-page-number:hover:not(.active) {
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #bfdbfe;
+}
+
+.jobs-v3-page-number.active {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  font-weight: 700;
+}
+
+.jobs-v3-page-ellipsis {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  padding: 0 4px;
+}
+
+@media (max-width: 640px) {
+  .jobs-v3-pagination {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 16px;
+  }
+  .jobs-v3-page-nav {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

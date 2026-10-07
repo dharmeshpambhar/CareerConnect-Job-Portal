@@ -75,7 +75,7 @@ const PostJob = () => {
 
   const { isAuthorized, user, isLoading } = useContext(Context);
 
-  if (isLoading) {
+  if (isLoading && !user?._id) {
     return (
       <div className="loading" style={{ textAlign: "center", margin: "100px auto", fontSize: "1.5rem" }}>
         Loading...

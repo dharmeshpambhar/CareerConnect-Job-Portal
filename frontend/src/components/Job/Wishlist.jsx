@@ -3,12 +3,21 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Context } from "../../main";
 import toast from "react-hot-toast";
 import { FaHeart, FaTimes } from "react-icons/fa";
-import { fetchWishlist, fetchAllJobs, toggleWishlist } from "../../apiService";
+import { fetchWishlist, fetchAllJobs, toggleWishlist, getCached } from "../../apiService";
 
 const Wishlist = () => {
-  const [wishlist, setWishlist] = useState([]);
-  const [jobsMap, setJobsMap] = useState(new Map());
   const { isAuthorized, user, setUser, isLoading } = useContext(Context);
+  const [wishlist, setWishlist] = useState(() => {
+    const cached = getCached("user_wishlist", 60000);
+    return cached && Array.isArray(cached.wishlist) ? cached.wishlist : [];
+  });
+  const [jobsMap, setJobsMap] = useState(() => {
+    const cachedJobs = getCached("all_jobs", 60000);
+    if (cachedJobs && Array.isArray(cachedJobs.jobs)) {
+      return new Map(cachedJobs.jobs.map((j) => [j._id?.toString(), j]));
+    }
+    return new Map();
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,7 +45,7 @@ const Wishlist = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !user?._id) {
     return (
       <div className="wl-loading">
         <div className="wl-loading-spinner"></div>

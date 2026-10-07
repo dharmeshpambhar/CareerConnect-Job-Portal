@@ -998,103 +998,188 @@ body {
   transform: none;
 }
 
-/* Modal Window styles */
+/* ══════════════════════════════════════════════════════════════════
+   PREMIUM MODAL SYSTEM — Redesigned 2025
+   ══════════════════════════════════════════════════════════════════ */
+
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(15, 23, 42, 0.35);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(8, 14, 30, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
+  animation: modalOverlayReveal 0.22s ease forwards;
+}
+
+@keyframes modalOverlayReveal {
+  from { opacity: 0; backdrop-filter: blur(0px); }
+  to   { opacity: 1; backdrop-filter: blur(12px); }
 }
 
 .modal-content {
   width: 100%;
-  max-width: 550px;
-  animation: modalScaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-width: 560px;
+  animation: modalPopIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  border-radius: 24px !important;
+  box-shadow:
+    0 32px 80px rgba(8, 14, 30, 0.22),
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.96) !important;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 }
 
+@keyframes modalPopIn {
+  from { opacity: 0; transform: scale(0.88) translateY(18px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ── Modal Header: gradient accent bar + icon + title ── */
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 1rem;
-  margin-bottom: 1.5rem;
+  padding: 1.4rem 1.75rem;
+  background: linear-gradient(135deg, rgba(99,102,241,0.07) 0%, rgba(6,182,212,0.04) 100%);
+  border-bottom: 1px solid rgba(99,102,241,0.1);
+  position: relative;
+  margin-bottom: 0;
+}
+
+.modal-header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-accent), var(--secondary-accent));
+  border-radius: 24px 24px 0 0;
 }
 
 .modal-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-main);
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  background: linear-gradient(135deg, var(--text-main) 0%, var(--primary-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-title-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+  -webkit-text-fill-color: #fff;
+  box-shadow: 0 4px 12px rgba(99,102,241,0.3);
 }
 
 .btn-close {
-  background: transparent;
-  border: none;
+  background: rgba(15, 23, 42, 0.05);
+  border: 1px solid rgba(15, 23, 42, 0.08);
   color: var(--text-muted);
-  font-size: 1.5rem;
+  font-size: 1.15rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .btn-close:hover {
-  background: rgba(15, 23, 42, 0.05);
-  color: var(--text-main);
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  transform: rotate(90deg);
 }
 
+/* ── Modal Body ── */
+.modal-body {
+  padding: 1.75rem;
+}
+
+.modal-scroll {
+  max-height: 62vh;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99,102,241,0.15) transparent;
+}
+
+/* ── Modal Footer ── */
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
-  border-top: 1px solid var(--border-color);
-  padding-top: 1.25rem;
-  margin-top: 1.5rem;
+  background: rgba(15, 23, 42, 0.015);
+  border-top: 1px solid rgba(15, 23, 42, 0.07);
+  padding: 1.1rem 1.75rem;
+  margin-top: 0;
 }
 
 .btn-cancel {
-  padding: 0.65rem 1.25rem;
+  padding: 0.6rem 1.3rem;
   background: transparent;
-  border: 1px solid var(--border-color);
+  border: 1.5px solid rgba(15, 23, 42, 0.12);
   color: var(--text-muted);
   border-radius: 10px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 0.88rem;
   transition: all 0.2s ease;
 }
 
 .btn-cancel:hover {
-  background: rgba(15, 23, 42, 0.03);
+  background: rgba(15, 23, 42, 0.04);
   color: var(--text-main);
+  border-color: rgba(15, 23, 42, 0.2);
 }
 
 .btn-save {
-  padding: 0.65rem 1.25rem;
-  background: var(--primary-accent);
-  border: 1px solid var(--primary-accent);
+  padding: 0.6rem 1.5rem;
+  background: linear-gradient(135deg, var(--primary-accent) 0%, #4f46e5 100%);
+  border: none;
   color: #fff;
   border-radius: 10px;
   cursor: pointer;
-  font-weight: 600;
-  transition: all 0.2s ease;
+  font-weight: 700;
+  font-size: 0.88rem;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.32);
 }
 
-.btn-save:hover {
-  background: #4f46e5;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+.btn-save:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.42);
+}
+
+.btn-save:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* Custom Visualizations Elements */
@@ -1200,60 +1285,254 @@ body {
   }
 }
 
-/* Floating label details dashboard */
+/* ══════════════════════════════════════════════════════════════════
+   PREMIUM DETAIL ITEM CARDS — Info Display
+   ══════════════════════════════════════════════════════════════════ */
+
 .detail-item {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
 
 .detail-label {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--text-muted);
   text-transform: uppercase;
-  margin-bottom: 0.25rem;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+  margin-bottom: 0.35rem;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .detail-value {
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   color: var(--text-main);
-  background: rgba(15, 23, 42, 0.02);
-  padding: 0.75rem;
-  border-radius: 8px;
-  border: 1px solid rgba(15, 23, 42, 0.04);
-  word-break: break-all;
+  background: rgba(248, 250, 255, 0.8);
+  padding: 0.72rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid rgba(99, 102, 241, 0.09);
+  word-break: break-word;
+  font-weight: 500;
+  line-height: 1.5;
+  transition: border-color 0.2s ease;
 }
 
+.detail-value:hover {
+  border-color: rgba(99, 102, 241, 0.18);
+}
+
+/* Info section grouping inside modal */
+.modal-section {
+  background: rgba(248, 250, 255, 0.5);
+  border: 1px solid rgba(99,102,241,0.08);
+  border-radius: 14px;
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.modal-section-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--primary-accent);
+  margin-bottom: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modal-section-title svg {
+  font-size: 0.9rem;
+}
+
+.modal-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.modal-info-grid.single {
+  grid-template-columns: 1fr;
+}
+
+.info-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.info-chip-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.info-chip-value {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-main);
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.info-chip-value.mono {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 0.78rem;
+  background: rgba(99,102,241,0.05);
+  padding: 3px 7px;
+  border-radius: 5px;
+  border: 1px solid rgba(99,102,241,0.1);
+  color: var(--primary-accent);
+}
+
+.info-chip-value.muted {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Cover letter / long text block */
+.detail-text-block {
+  background: rgba(248, 250, 255, 0.8);
+  border: 1px solid rgba(99, 102, 241, 0.09);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--text-main);
+  white-space: pre-wrap;
+  max-height: 160px;
+  overflow-y: auto;
+  font-weight: 400;
+}
+
+/* Resume / CV card */
+.cv-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.15rem;
+  border-radius: 12px;
+  border: 1.5px dashed rgba(99,102,241,0.25);
+  background: rgba(99,102,241,0.03);
+  margin-top: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.cv-card:hover {
+  border-color: rgba(99,102,241,0.4);
+  background: rgba(99,102,241,0.06);
+}
+
+.cv-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(6,182,212,0.1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  flex-shrink: 0;
+}
+
+.cv-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.cv-card-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cv-card-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.cv-card-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.cv-card-btn.primary {
+  background: linear-gradient(135deg, var(--primary-accent), #4f46e5);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+}
+
+.cv-card-btn.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(99,102,241,0.4);
+}
+
+.cv-card-btn.purple {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(124,58,237,0.3);
+}
+
+.cv-card-btn.purple:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(124,58,237,0.4);
+}
+
+/* Legacy cv-preview-box — kept for compatibility */
 .cv-preview-box {
   width: 100%;
-  height: 200px;
-  border-radius: 8px;
+  min-height: 120px;
+  border-radius: 12px;
   background: rgba(15, 23, 42, 0.02);
-  border: 1px dashed var(--border-color);
+  border: 1.5px dashed rgba(99,102,241,0.2);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  margin-top: 1rem;
-}
-
-.cv-preview-box a {
-  color: var(--primary-accent);
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 0.9rem;
-  padding: 0.5rem 1rem;
-  background: rgba(99, 102, 241, 0.08);
-  border-radius: 6px;
-  border: 1px solid rgba(99, 102, 241, 0.15);
+  margin-top: 0.5rem;
+  padding: 1rem;
   transition: all 0.2s ease;
 }
 
+.cv-preview-box:hover {
+  background: rgba(99,102,241,0.04);
+  border-color: rgba(99,102,241,0.3);
+}
+
+.cv-preview-box a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.5rem 1.1rem;
+  background: linear-gradient(135deg, var(--primary-accent), #4f46e5);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+  transition: all 0.2s ease;
+}
 
 .cv-preview-box a:hover {
-  background: rgba(99, 102, 241, 0.15);
   transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(99,102,241,0.4);
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1342,105 +1621,17 @@ body {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   ENHANCED MODAL STYLES — More polished Edit Account modal
+   ENHANCED MODAL STYLES — Premium 2025 Design System
    ══════════════════════════════════════════════════════════════════ */
-
-.modal-overlay {
-  animation: modalOverlayIn 0.2s ease forwards;
-}
-
-@keyframes modalOverlayIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-/* Modal card wider for edit account */
-.modal-content {
-  width: 100%;
-  max-width: 520px;
-  animation: modalScaleIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
-  border-radius: 20px !important;
-  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.14), 0 0 0 1px rgba(99, 102, 241, 0.08) !important;
-  overflow: hidden;
-}
-
-.modal-header {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, rgba(6, 182, 212, 0.02) 100%);
-  border-bottom: 1px solid var(--border-color);
-  padding: 1.25rem 1.5rem;
-  margin-bottom: 0;
-}
-
-.modal-title {
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: var(--text-main);
-  background: linear-gradient(135deg, var(--text-main) 0%, var(--primary-accent) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
 
 /* Modal body padding when form follows header */
 .modal-content form {
-  padding: 1.5rem;
+  padding: 1.5rem 1.75rem;
 }
 
+/* Ensure close button inside form modals works too */
 .modal-content .modal-header + form {
   padding-top: 1.5rem;
-}
-
-.modal-footer {
-  background: rgba(15, 23, 42, 0.01);
-  border-top: 1px solid var(--border-color);
-  padding: 1rem 1.5rem;
-  margin-top: 0;
-}
-
-/* Enhanced save button */
-.btn-save {
-  padding: 0.65rem 1.5rem;
-  background: linear-gradient(135deg, var(--primary-accent) 0%, #4f46e5 100%);
-  border: none;
-  color: #fff;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 700;
-  font-size: 0.9rem;
-  letter-spacing: 0.2px;
-  transition: all 0.25s ease;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
-}
-
-.btn-save:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
-  background: linear-gradient(135deg, #818cf8 0%, #4f46e5 100%);
-}
-
-.btn-save:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Enhanced cancel button */
-.btn-cancel {
-  padding: 0.65rem 1.25rem;
-  background: transparent;
-  border: 1.5px solid var(--border-color);
-  color: var(--text-muted);
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
-}
-
-.btn-cancel:hover {
-  background: rgba(15, 23, 42, 0.04);
-  color: var(--text-main);
-  border-color: rgba(15, 23, 42, 0.14);
 }
 
 /* ══════════════════════════════════════════════════════════════════

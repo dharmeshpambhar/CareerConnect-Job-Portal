@@ -15,6 +15,10 @@ import {
   FaBuilding,
   FaFileAlt,
   FaExternalLinkAlt,
+  FaUserAlt,
+  FaEnvelope,
+  FaStickyNote,
+  FaGavel,
 } from "react-icons/fa";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api/v1";
@@ -66,16 +70,11 @@ const FraudReports = () => {
     try {
       const { data } = await axios.patch(
         `${API_BASE}/fraud/admin/${selectedReport._id}`,
-        {
-          status,
-          adminNotes,
-          actionTaken: actionLabel,
-        },
+        { status, adminNotes, actionTaken: actionLabel },
         { withCredentials: true }
       );
 
       toast.success(data.message || `Action executed: ${status}`);
-      // Update local reports list
       setReports((prev) =>
         prev.map((r) => (r._id === selectedReport._id ? data.report : r))
       );
@@ -89,8 +88,7 @@ const FraudReports = () => {
 
   // Filter logic
   const filteredReports = reports.filter((r) => {
-    const matchesStatus =
-      statusFilter === "All" || r.status === statusFilter;
+    const matchesStatus = statusFilter === "All" || r.status === statusFilter;
     const s = search.toLowerCase();
     const matchesSearch =
       (r.companyName && r.companyName.toLowerCase().includes(s)) ||
@@ -109,16 +107,11 @@ const FraudReports = () => {
 
   const getBadgeClass = (status) => {
     switch (status) {
-      case "Company Blacklisted":
-        return "blacklisted";
-      case "Company Warned":
-        return "warned";
-      case "Under Review":
-        return "review";
-      case "Dismissed":
-        return "dismissed";
-      default:
-        return "pending";
+      case "Company Blacklisted": return "blacklisted";
+      case "Company Warned": return "warned";
+      case "Under Review": return "review";
+      case "Dismissed": return "dismissed";
+      default: return "pending";
     }
   };
 
@@ -130,7 +123,7 @@ const FraudReports = () => {
         Inspect candidate scam complaints, review evidence, issue warnings, or blacklist deceptive employers.
       </p>
 
-      {/* Stats Cards — styled with .stats-grid & .glass-panel .stat-card matching Dashboard */}
+      {/* Stats Cards */}
       <div className="stats-grid">
         <div className="glass-panel stat-card">
           <div className="stat-header">
@@ -169,7 +162,7 @@ const FraudReports = () => {
         </div>
       </div>
 
-      {/* Filter and Search Bar — styled with .filter-row, .search-input-wrapper & .select-filter matching Accounts & Jobs */}
+      {/* Filter and Search Bar */}
       <div className="filter-row">
         <div className="search-input-wrapper input-icon-wrapper" style={{ margin: 0 }}>
           <RxMagnifyingGlass />
@@ -195,7 +188,7 @@ const FraudReports = () => {
         </select>
       </div>
 
-      {/* Reports Table — styled with .glass-panel & .admin-table matching Applications & Accounts */}
+      {/* Reports Table */}
       {loading ? (
         <div className="admin-loader">
           <div className="admin-spinner" />
@@ -284,43 +277,78 @@ const FraudReports = () => {
         </div>
       )}
 
-      {/* ── Inspection Glass Modal — styled with .modal-overlay & .modal-content .glass-panel ── */}
+      {/* ── Premium Dispute Investigation Modal ── */}
       {selectedReport && (
         <div className="modal-overlay" onClick={() => setSelectedReport(null)}>
           <div
             className="modal-content glass-panel"
-            style={{ maxWidth: "640px" }}
+            style={{ maxWidth: "660px" }}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Header */}
             <div className="modal-header">
-              <h3 className="modal-title">Dispute Investigation</h3>
-              <button onClick={() => setSelectedReport(null)} className="btn-close">
+              <div className="modal-title">
+                <span className="modal-title-icon" style={{ background: "linear-gradient(135deg, #ef4444, #dc2626)" }}>
+                  <FaShieldAlt />
+                </span>
+                Dispute Investigation
+              </div>
+              <button onClick={() => setSelectedReport(null)} className="btn-close" title="Close">
                 <RxCross2 />
               </button>
             </div>
 
-            <div style={{ maxHeight: "70vh", overflowY: "auto", paddingRight: "0.5rem" }}>
-              {/* Company & Candidate Details */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
-                <div className="detail-item">
-                  <div className="detail-label">Accused Company</div>
-                  <div className="detail-value">{selectedReport.companyName}</div>
-                  <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>
-                    Position: {selectedReport.jobTitle}
-                  </div>
+            {/* Dispute status strip */}
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "0.85rem 1.75rem",
+              background: "linear-gradient(135deg, rgba(239,68,68,0.04), rgba(245,158,11,0.02))",
+              borderBottom: "1px solid rgba(239,68,68,0.08)"
+            }}>
+              <div style={{ fontSize: "0.82rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 8 }}>
+                Current Status:
+                <span className={`badge ${getBadgeClass(selectedReport.status)}`} style={{ margin: 0 }}>
+                  {selectedReport.status}
+                </span>
+              </div>
+              {selectedReport.actionTaken && (
+                <div style={{ fontSize: "0.78rem", color: "var(--primary-accent)", fontStyle: "italic" }}>
+                  Last Action: {selectedReport.actionTaken}
                 </div>
-                <div className="detail-item">
-                  <div className="detail-label">Reporting Candidate</div>
-                  <div className="detail-value">{selectedReport.applicantName}</div>
-                  <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>
-                    {selectedReport.applicantEmail}
+              )}
+            </div>
+
+            {/* Scrollable Body */}
+            <div className="modal-scroll" style={{ padding: "1.5rem 1.75rem" }}>
+
+              {/* Accused Company & Reporting Candidate */}
+              <div className="modal-section">
+                <div className="modal-section-title">
+                  <FaBuilding /> Parties Involved
+                </div>
+                <div className="modal-info-grid">
+                  <div className="info-chip">
+                    <span className="info-chip-label"><FaBuilding style={{ display: "inline", marginRight: 3 }} />Accused Company</span>
+                    <span className="info-chip-value">{selectedReport.companyName}</span>
+                    <span style={{ fontSize: "0.74rem", color: "var(--text-muted)", marginTop: 2 }}>
+                      Position: {selectedReport.jobTitle}
+                    </span>
+                  </div>
+                  <div className="info-chip">
+                    <span className="info-chip-label"><FaUserAlt style={{ display: "inline", marginRight: 3 }} />Reporting Candidate</span>
+                    <span className="info-chip-value">{selectedReport.applicantName}</span>
+                    <span style={{ fontSize: "0.74rem", color: "var(--text-muted)", marginTop: 2 }}>
+                      {selectedReport.applicantEmail}
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* Reported Category */}
-              <div className="detail-item" style={{ marginBottom: "1rem" }}>
-                <div className="detail-label">Reported Fraud Category</div>
+              {/* Fraud Category */}
+              <div className="modal-section">
+                <div className="modal-section-title">
+                  <FaExclamationTriangle /> Reported Fraud Category
+                </div>
                 <div className="fraud-modal-category">
                   <FaExclamationTriangle style={{ color: "var(--warning-color)", marginRight: "6px" }} />
                   <span>{selectedReport.reason}</span>
@@ -328,43 +356,59 @@ const FraudReports = () => {
               </div>
 
               {/* Candidate Statement */}
-              <div className="detail-item" style={{ marginBottom: "1rem" }}>
-                <div className="detail-label">Candidate Statement & Explanation</div>
-                <div className="fraud-modal-statement">
-                  {selectedReport.details}
+              <div className="modal-section">
+                <div className="modal-section-title">
+                  <FaEnvelope /> Candidate Statement & Explanation
+                </div>
+                <div className="fraud-modal-statement detail-text-block">
+                  {selectedReport.details || "No detailed statement was provided."}
                 </div>
               </div>
 
-              {/* Evidence / Screenshot */}
-              <div className="detail-item" style={{ marginBottom: "1rem" }}>
-                <div className="detail-label">Attached Evidence / Proof</div>
+              {/* Evidence */}
+              <div className="modal-section">
+                <div className="modal-section-title">
+                  <FaFileAlt /> Attached Evidence / Proof
+                </div>
                 {selectedReport.evidenceUrl ? (
                   <div className="fraud-modal-evidence-box">
-                    <a
-                      href={selectedReport.evidenceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-evidence-link"
-                    >
-                      <FaFileAlt /> View Uploaded Screenshot / Proof{" "}
-                      <FaExternalLinkAlt style={{ fontSize: "0.75rem", marginLeft: "4px" }} />
-                    </a>
+                    <div className="cv-card" style={{ borderColor: "rgba(99,102,241,0.3)", background: "rgba(99,102,241,0.03)" }}>
+                      <div className="cv-card-icon" style={{ fontSize: "1.5rem" }}>📁</div>
+                      <div className="cv-card-info">
+                        <div className="cv-card-title">Uploaded Screenshot / Proof Document</div>
+                        <div className="cv-card-subtitle">Evidence submitted by candidate</div>
+                      </div>
+                      <a
+                        href={selectedReport.evidenceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="cv-card-btn primary"
+                      >
+                        <FaExternalLinkAlt style={{ fontSize: "0.7rem" }} /> View
+                      </a>
+                    </div>
                     {selectedReport.evidenceUrl.match(/\.(jpeg|jpg|png|webp)/i) && (
-                      <div className="evidence-modal-thumb">
+                      <div className="evidence-modal-thumb" style={{ marginTop: "0.75rem" }}>
                         <img src={selectedReport.evidenceUrl} alt="Evidence proof" />
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontStyle: "italic" }}>
+                  <div style={{
+                    padding: "0.9rem 1rem", borderRadius: 10,
+                    background: "rgba(15,23,42,0.02)", border: "1px solid rgba(15,23,42,0.06)",
+                    fontSize: "0.85rem", color: "var(--text-muted)", fontStyle: "italic"
+                  }}>
                     No screenshot or document was attached to this dispute.
                   </div>
                 )}
               </div>
 
               {/* Admin Notes */}
-              <div className="detail-item" style={{ marginBottom: "1rem" }}>
-                <div className="detail-label">Administrator Case Notes</div>
+              <div className="modal-section">
+                <div className="modal-section-title">
+                  <FaStickyNote /> Administrator Case Notes
+                </div>
                 <textarea
                   className="admin-case-notes"
                   rows={3}
@@ -373,23 +417,9 @@ const FraudReports = () => {
                   onChange={(e) => setAdminNotes(e.target.value)}
                 />
               </div>
-
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0.5rem 0" }}>
-                <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
-                  Current Status:{" "}
-                  <span className={`badge ${getBadgeClass(selectedReport.status)}`}>
-                    {selectedReport.status}
-                  </span>
-                </span>
-                {selectedReport.actionTaken && (
-                  <span style={{ fontSize: "0.8rem", color: "var(--primary-accent)", fontStyle: "italic" }}>
-                    Last Action: {selectedReport.actionTaken}
-                  </span>
-                )}
-              </div>
             </div>
 
-            {/* Moderation Actions */}
+            {/* Moderation Actions Footer */}
             <div className="fraud-modal-footer">
               <button
                 type="button"

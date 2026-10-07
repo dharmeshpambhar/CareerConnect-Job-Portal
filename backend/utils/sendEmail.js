@@ -4,16 +4,20 @@ let cachedTransporter = null;
 
 const getTransporter = () => {
   if (!cachedTransporter) {
+    const isGmail =
+      (process.env.SMTP_HOST || "smtp.gmail.com").includes("gmail") ||
+      (process.env.SMTP_SERVICE || "").toLowerCase() === "gmail";
+
+    const cleanPass = (process.env.SMTP_PASS || "").replace(/\s+/g, "").trim();
+
     cachedTransporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      service: isGmail ? "gmail" : undefined,
+      host: isGmail ? undefined : process.env.SMTP_HOST || "smtp.gmail.com",
       port: Number(process.env.SMTP_PORT) || 587,
       secure: process.env.SMTP_SECURE === "true",
-      connectionTimeout: 3500, // 3.5s max to prevent hanging
-      greetingTimeout: 3000,
-      socketTimeout: 4000, // 4s socket timeout
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: (process.env.SMTP_USER || "").trim(),
+        pass: cleanPass,
       },
     });
   }

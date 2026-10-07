@@ -5,7 +5,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api/v1";
 // ─── High Performance In-Memory Cache Layer ─────────────────────────────────
 const memoryCache = new Map();
 
-const getCached = (key, ttlMs = 15000) => {
+export const getCached = (key, ttlMs = 30000) => {
   const item = memoryCache.get(key);
   if (!item) return null;
   if (Date.now() - item.timestamp > ttlMs) {
@@ -15,7 +15,7 @@ const getCached = (key, ttlMs = 15000) => {
   return item.data;
 };
 
-const setCached = (key, data) => {
+export const setCached = (key, data) => {
   memoryCache.set(key, { data, timestamp: Date.now() });
 };
 
@@ -29,20 +29,44 @@ export const clearCache = (prefix = "") => {
   }
 };
 
+// Synchronously get a job from memory if already loaded
+export const getCachedJobDirectly = (id) => {
+  if (!id) return null;
+  const single = getCached(`job_${id}`, 60000);
+  if (single && single.job) return single.job;
+  const allJobsCached = getCached("all_jobs", 60000);
+  if (allJobsCached && Array.isArray(allJobsCached.jobs)) {
+    const found = allJobsCached.jobs.find(
+      (j) => j._id?.toString() === id.toString()
+    );
+    if (found) return found;
+  }
+  return null;
+};
+
 // ─── Jobs ───────────────────────────────────────────────────────────────────
 
 export const fetchAllJobs = async (forceRefresh = false) => {
   const cacheKey = "all_jobs";
   if (!forceRefresh) {
-    const cached = getCached(cacheKey, 20000);
+    const cached = getCached(cacheKey, 30000);
     if (cached) return cached;
   }
   try {
     const { data } = await axios.get(`${API_URL}/job/getall`, {
       withCredentials: true,
+      timeout: 8000,
     });
-    const result = { jobs: data.jobs, offline: false };
+    const result = { jobs: data.jobs || [], offline: false };
     setCached(cacheKey, result);
+    // Pre-seed individual job caches
+    if (Array.isArray(data.jobs)) {
+      data.jobs.forEach((j) => {
+        if (j._id) {
+          setCached(`job_${j._id}`, { job: j, offline: false });
+        }
+      });
+    }
     return result;
   } catch (error) {
     console.error("fetchAllJobs error:", error);
@@ -50,13 +74,25 @@ export const fetchAllJobs = async (forceRefresh = false) => {
   }
 };
 
-export const fetchJobById = async (id) => {
+export const fetchJobById = async (id, forceRefresh = false) => {
+  if (!id) return { job: null, offline: false };
   const cacheKey = `job_${id}`;
-  const cached = getCached(cacheKey, 30000);
-  if (cached) return cached;
+  if (!forceRefresh) {
+    const cached = getCached(cacheKey, 45000);
+    if (cached) return cached;
+
+    // Check if available from all_jobs cache
+    const existing = getCachedJobDirectly(id);
+    if (existing) {
+      const result = { job: existing, offline: false };
+      setCached(cacheKey, result);
+      return result;
+    }
+  }
   try {
     const { data } = await axios.get(`${API_URL}/job/${id}`, {
       withCredentials: true,
+      timeout: 8000,
     });
     const result = { job: data.job, offline: false };
     setCached(cacheKey, result);
@@ -67,12 +103,20 @@ export const fetchJobById = async (id) => {
   }
 };
 
-export const fetchMyJobs = async () => {
+export const fetchMyJobs = async (forceRefresh = false) => {
+  const cacheKey = "my_jobs";
+  if (!forceRefresh) {
+    const cached = getCached(cacheKey, 20000);
+    if (cached) return cached;
+  }
   try {
     const { data } = await axios.get(`${API_URL}/job/getmyjobs`, {
       withCredentials: true,
+      timeout: 8000,
     });
-    return { myJobs: data.myJobs, offline: false };
+    const result = { myJobs: data.myJobs || [], offline: false };
+    setCached(cacheKey, result);
+    return result;
   } catch (error) {
     console.error("fetchMyJobs error:", error);
     return { myJobs: [], offline: true };
@@ -81,6 +125,7 @@ export const fetchMyJobs = async () => {
 
 export const updateJob = async (jobId, updatedJob) => {
   clearCache("all_jobs");
+  clearCache("my_jobs");
   clearCache(`job_${jobId}`);
   try {
     const { data } = await axios.put(`${API_URL}/job/update/${jobId}`, updatedJob, {
@@ -95,6 +140,7 @@ export const updateJob = async (jobId, updatedJob) => {
 
 export const deleteJob = async (jobId) => {
   clearCache("all_jobs");
+  clearCache("my_jobs");
   clearCache(`job_${jobId}`);
   try {
     const { data } = await axios.delete(`${API_URL}/job/delete/${jobId}`, {
@@ -112,14 +158,15 @@ export const deleteJob = async (jobId) => {
 export const fetchWishlist = async (force = false) => {
   const cacheKey = "user_wishlist";
   if (!force) {
-    const cached = getCached(cacheKey, 15000);
+    const cached = getCached(cacheKey, 20000);
     if (cached) return cached;
   }
   try {
     const { data } = await axios.get(`${API_URL}/wishlist`, {
       withCredentials: true,
+      timeout: 8000,
     });
-    const result = { wishlist: data.wishlist, offline: false };
+    const result = { wishlist: data.wishlist || [], offline: false };
     setCached(cacheKey, result);
     return result;
   } catch (error) {
@@ -135,7 +182,6 @@ export const toggleWishlist = async (jobId) => {
     {},
     { withCredentials: true }
   );
-  // Returns { success, message, saved }
   return { message: data.message, saved: data.saved };
 };
 
@@ -143,6 +189,7 @@ export const checkWishlist = async (jobId) => {
   try {
     const { data } = await axios.get(`${API_URL}/wishlist/check/${jobId}`, {
       withCredentials: true,
+      timeout: 5000,
     });
     return { saved: data.saved };
   } catch (error) {
@@ -164,12 +211,20 @@ export const removeFromWishlist = async (jobId) => {
 
 // ─── Company Profile ─────────────────────────────────────────────────────────
 
-export const fetchCompanyProfile = async () => {
+export const fetchCompanyProfile = async (forceRefresh = false) => {
+  const cacheKey = "company_profile_me";
+  if (!forceRefresh) {
+    const cached = getCached(cacheKey, 30000);
+    if (cached) return cached;
+  }
   try {
     const { data } = await axios.get(`${API_URL}/user/company`, {
       withCredentials: true,
+      timeout: 8000,
     });
-    return { company: data.company, offline: false };
+    const result = { company: data.company || {}, offline: false };
+    setCached(cacheKey, result);
+    return result;
   } catch (error) {
     console.error("fetchCompanyProfile error:", error);
     return { company: {}, offline: true };
@@ -177,18 +232,28 @@ export const fetchCompanyProfile = async () => {
 };
 
 export const updateCompanyProfile = async (companyData) => {
+  clearCache("company_profile_me");
+  clearCache("employer_full_profile");
   const { data } = await axios.put(`${API_URL}/user/company`, companyData, {
     withCredentials: true,
   });
   return { message: data.message, company: data.company };
 };
 
-export const fetchEmployerProfile = async (id) => {
+export const fetchEmployerProfile = async (id, forceRefresh = false) => {
+  const cacheKey = `employer_profile_${id}`;
+  if (!forceRefresh) {
+    const cached = getCached(cacheKey, 30000);
+    if (cached) return cached;
+  }
   try {
     const { data } = await axios.get(`${API_URL}/user/employer/${id}`, {
       withCredentials: true,
+      timeout: 8000,
     });
-    return { employer: data.employer, jobs: data.jobs, offline: false };
+    const result = { employer: data.employer, jobs: data.jobs || [], offline: false };
+    setCached(cacheKey, result);
+    return result;
   } catch (error) {
     console.error("fetchEmployerProfile error:", error);
     return { employer: null, jobs: [], offline: true };
@@ -197,15 +262,22 @@ export const fetchEmployerProfile = async (id) => {
 
 // ─── Applications ────────────────────────────────────────────────────────────
 
-export const fetchApplications = async (role) => {
+export const fetchApplications = async (role, forceRefresh = false) => {
+  const cacheKey = `applications_${role}`;
+  if (!forceRefresh) {
+    const cached = getCached(cacheKey, 20000);
+    if (cached) return cached;
+  }
   try {
     const endpoint =
       role === "Employer"
         ? `${API_URL}/application/employer/getall`
         : `${API_URL}/application/jobseeker/getall`;
 
-    const { data } = await axios.get(endpoint, { withCredentials: true });
-    return { applications: data.applications, offline: false };
+    const { data } = await axios.get(endpoint, { withCredentials: true, timeout: 8000 });
+    const result = { applications: data.applications || [], offline: false };
+    setCached(cacheKey, result);
+    return result;
   } catch (error) {
     console.error("fetchApplications error:", error);
     return { applications: [], offline: true };
@@ -213,6 +285,7 @@ export const fetchApplications = async (role) => {
 };
 
 export const deleteApplication = async (id) => {
+  clearCache("applications_");
   try {
     const { data } = await axios.delete(`${API_URL}/application/delete/${id}`, {
       withCredentials: true,
@@ -225,6 +298,7 @@ export const deleteApplication = async (id) => {
 };
 
 export const updateApplicationStatus = async (id, status) => {
+  clearCache("applications_");
   try {
     const { data } = await axios.patch(
       `${API_URL}/application/status/${id}`,

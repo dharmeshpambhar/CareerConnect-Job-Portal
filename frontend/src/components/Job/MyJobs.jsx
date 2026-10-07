@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState, useMemo } from "react";
 import toast from "react-hot-toast";
 import { Context } from "../../main";
 import { useNavigate, Navigate, Link } from "react-router-dom";
-import { fetchMyJobs, updateJob, deleteJob } from "../../apiService";
+import { fetchMyJobs, updateJob, deleteJob, getCached } from "../../apiService";
 import {
   FiBriefcase,
   FiPlus,
@@ -36,7 +36,11 @@ const CATEGORIES = [
 ];
 
 const MyJobs = () => {
-  const [myJobs, setMyJobs] = useState([]);
+  const { isAuthorized, user, isLoading } = useContext(Context);
+  const [myJobs, setMyJobs] = useState(() => {
+    const cached = getCached("my_jobs", 60000);
+    return cached && Array.isArray(cached.myJobs) ? cached.myJobs : [];
+  });
   const [editingJobId, setEditingJobId] = useState(null);
   const [editFormData, setEditFormData] = useState({});
   const [isUpdating, setIsUpdating] = useState(false);
@@ -52,7 +56,6 @@ const MyJobs = () => {
   const [statusFilter, setStatusFilter] = useState("all"); // 'all' | 'active' | 'expired'
   const [categoryFilter, setCategoryFilter] = useState("all");
 
-  const { isAuthorized, user, isLoading } = useContext(Context);
   const navigateTo = useNavigate();
 
   // Fetch employer's jobs
@@ -90,7 +93,6 @@ const MyJobs = () => {
             },
           ];
           setMyJobs(demoJobs);
-          toast("Demo mode active with sample jobs.", { icon: "💼" });
         } else {
           setMyJobs(data || []);
         }
@@ -98,7 +100,7 @@ const MyJobs = () => {
     }
   }, [isAuthorized, user]);
 
-  if (isLoading) {
+  if (isLoading && !user?._id) {
     return (
       <div className="myJobs-loading">
         <div className="myJobs-spinner" />

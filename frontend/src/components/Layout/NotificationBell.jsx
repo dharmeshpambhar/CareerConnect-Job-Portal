@@ -4,6 +4,8 @@ import { FaBell, FaCog, FaCheck, FaTimes } from "react-icons/fa";
 import { Context } from "../../main";
 import toast from "react-hot-toast";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api/v1";
+
 const NotificationBell = () => {
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -25,7 +27,7 @@ const NotificationBell = () => {
   // Fetch notifications
   const fetchNotifications = async () => {
     try {
-      const response = await axios.get("http://localhost:4000/api/v1/user/notifications", {
+      const response = await axios.get(`${API_URL}/user/notifications`, {
         withCredentials: true,
       });
       setNotifications(response.data.notifications);
@@ -58,7 +60,7 @@ const NotificationBell = () => {
   const handleMarkAllRead = async () => {
     try {
       await axios.put(
-        "http://localhost:4000/api/v1/user/notifications/mark-read",
+        `${API_URL}/user/notifications/mark-read`,
         {},
         { withCredentials: true }
       );
@@ -80,7 +82,7 @@ const NotificationBell = () => {
 
     try {
       const response = await axios.put(
-        "http://localhost:4000/api/v1/user/notifications/settings",
+        `${API_URL}/user/notifications/settings`,
         updatedSettings,
         { withCredentials: true }
       );

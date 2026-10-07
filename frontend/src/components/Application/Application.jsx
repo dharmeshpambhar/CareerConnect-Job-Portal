@@ -6,14 +6,15 @@ import { Context } from "../../main";
 import { FaRegUser } from "react-icons/fa";
 import { MdOutlineMailOutline, MdOutlinePhone } from "react-icons/md";
 import { FiMapPin, FiUploadCloud } from "react-icons/fi";
+import { fetchJobById, getCachedJobDirectly } from "../../apiService";
 
 const Application = () => {
   const { id } = useParams();
   const navigateTo = useNavigate();
   const { isAuthorized, user, isLoading } = useContext(Context);
 
-  // Job Details for Banner
-  const [job, setJob] = useState({});
+  // Job Details for Banner — instant synchronous initialization from memory cache
+  const [job, setJob] = useState(() => getCachedJobDirectly(id) || {});
 
   // Input states
   const [phone, setPhone] = useState("");
@@ -29,18 +30,10 @@ const Application = () => {
 
   // Fetch job details on load
   useEffect(() => {
-    if (isAuthorized) {
-      axios
-        .get(`${API_URL}/job/${id}`, {
-          withCredentials: true,
-          timeout: 8000,
-        })
-        .then((res) => {
-          setJob(res.data.job);
-        })
-        .catch((error) => {
-          console.log(error);
-        });
+    if (isAuthorized && id) {
+      fetchJobById(id).then(({ job: data }) => {
+        if (data) setJob(data);
+      });
     }
   }, [isAuthorized, id]);
 
@@ -55,7 +48,7 @@ const Application = () => {
   useEffect(() => {
     if (isAuthorized && user && user.role === "Job Seeker") {
       axios
-        .get(`${API_URL}/jobseeker/profile`, { withCredentials: true, timeout: 8000 })
+        .get(`${API_URL}/user/jobseeker/profile`, { withCredentials: true, timeout: 5000 })
         .then((res) => {
           const profile = res.data.profile;
           // Prefer workEmail; fall back to login email

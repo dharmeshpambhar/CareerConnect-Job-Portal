@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { RxTrash, RxMagnifyingGlass, RxCross2 } from "react-icons/rx";
-import { FaInfoCircle, FaDownload } from "react-icons/fa";
+import { FaInfoCircle, FaFileAlt, FaUserCircle, FaIdBadge, FaEnvelope, FaPhone, FaMapMarkerAlt, FaDownload, FaRegFileAlt, FaBriefcase } from "react-icons/fa";
 
 const Applications = () => {
   const [applications, setApplications] = useState([]);
@@ -16,9 +16,7 @@ const Applications = () => {
     try {
       const { data } = await axios.get(
         "http://localhost:4000/api/v1/admin/applications",
-        {
-          withCredentials: true,
-        }
+        { withCredentials: true }
       );
       setApplications(data.applications || []);
     } catch (error) {
@@ -37,9 +35,7 @@ const Applications = () => {
     try {
       const { data } = await axios.delete(
         `http://localhost:4000/api/v1/admin/applications/${id}`,
-        {
-          withCredentials: true,
-        }
+        { withCredentials: true }
       );
       toast.success(data.message);
       setApplications(applications.filter(app => app._id !== id));
@@ -49,7 +45,7 @@ const Applications = () => {
   };
 
   const filteredApps = applications.filter((app) => {
-    return app.name.toLowerCase().includes(search.toLowerCase()) || 
+    return app.name.toLowerCase().includes(search.toLowerCase()) ||
            app.email.toLowerCase().includes(search.toLowerCase()) ||
            app.phone.toString().includes(search);
   });
@@ -63,9 +59,9 @@ const Applications = () => {
       <div className="filter-row">
         <div className="search-input-wrapper input-icon-wrapper" style={{ margin: 0 }}>
           <RxMagnifyingGlass />
-          <input 
-            type="text" 
-            className="search-input" 
+          <input
+            type="text"
+            className="search-input"
             placeholder="Search applications by candidate name, email, or phone..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -110,15 +106,15 @@ const Applications = () => {
                       <td>{app.address}</td>
                       <td>
                         <div className="btn-action-group">
-                          <button 
-                            onClick={() => setSelectedApp(app)} 
+                          <button
+                            onClick={() => setSelectedApp(app)}
                             className="btn-action edit"
                             title="View application details"
                           >
                             <FaInfoCircle />
                           </button>
-                          <button 
-                            onClick={() => handleDelete(app._id)} 
+                          <button
+                            onClick={() => handleDelete(app._id)}
                             className="btn-action delete"
                             title="Delete submission record"
                           >
@@ -135,104 +131,140 @@ const Applications = () => {
         </div>
       )}
 
-      {/* Detail overlay glass modal */}
+      {/* ── Premium Detail Modal ── */}
       {selectedApp && (
-        <div className="modal-overlay">
-          <div className="modal-content glass-panel" style={{ maxWidth: "600px" }}>
+        <div className="modal-overlay" onClick={() => setSelectedApp(null)}>
+          <div
+            className="modal-content glass-panel"
+            style={{ maxWidth: "620px" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
             <div className="modal-header">
-              <h3 className="modal-title">Application Review</h3>
-              <button onClick={() => setSelectedApp(null)} className="btn-close">
+              <div className="modal-title">
+                <span className="modal-title-icon">
+                  <FaRegFileAlt />
+                </span>
+                Application Review
+              </div>
+              <button onClick={() => setSelectedApp(null)} className="btn-close" title="Close">
                 <RxCross2 />
               </button>
             </div>
-            
-            <div style={{ maxHeight: "70vh", overflowY: "auto", paddingRight: "0.5rem" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                <div className="detail-item">
-                  <div className="detail-label">Name</div>
-                  <div className="detail-value">{selectedApp.name}</div>
-                </div>
-                <div className="detail-item">
-                  <div className="detail-label">Email</div>
-                  <div className="detail-value" style={{ fontSize: "0.85rem" }}>{selectedApp.email}</div>
-                </div>
-              </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                <div className="detail-item">
-                  <div className="detail-label">Phone</div>
-                  <div className="detail-value">{selectedApp.phone}</div>
-                </div>
-                <div className="detail-item">
-                  <div className="detail-label">Address</div>
-                  <div className="detail-value">{selectedApp.address}</div>
-                </div>
-              </div>
+            {/* Scrollable Body */}
+            <div className="modal-scroll" style={{ padding: "1.5rem 1.75rem" }}>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                <div className="detail-item">
-                  <div className="detail-label">Applicant Account ID</div>
-                  <div className="detail-value" style={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{selectedApp.applicantID?.user}</div>
+              {/* Candidate Info Section */}
+              <div className="modal-section">
+                <div className="modal-section-title">
+                  <FaUserCircle /> Candidate Information
                 </div>
-                <div className="detail-item">
-                  <div className="detail-label">Employer Account ID</div>
-                  <div className="detail-value" style={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{selectedApp.employerID?.user}</div>
-                </div>
-              </div>
-
-              <div className="detail-item">
-                <div className="detail-label">Cover Letter Description</div>
-                <div className="detail-value" style={{ whiteSpace: "pre-wrap", lineHeight: "1.5", fontSize: "0.9rem" }}>
-                  {selectedApp.coverLetter}
-                </div>
-              </div>
-
-              {/* 1. Main Priority Profile Resume */}
-              {selectedApp.applicantProfileResume && selectedApp.applicantProfileResume.url && (
-                <div className="detail-item" style={{ marginTop: "1rem" }}>
-                  <div className="detail-label" style={{ color: "#38bdf8" }}>⭐ Candidate Profile Resume (Main / Priority)</div>
-                  <div className="cv-preview-box" style={{ background: "rgba(56, 189, 248, 0.08)", border: "1px solid rgba(56, 189, 248, 0.25)" }}>
-                    <FaDownload style={{ fontSize: "1.8rem", color: "#38bdf8" }} />
-                    <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
-                      {selectedApp.applicantProfileResume.name || "Master Profile Resume"}
-                    </span>
-                    <a 
-                      href={selectedApp.applicantProfileResume.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      title="Open candidate main profile resume in new tab"
-                      style={{ background: "linear-gradient(135deg, #0284c7, #0369a1)", color: "#fff", padding: "6px 14px", borderRadius: "6px", textDecoration: "none", fontWeight: 600, fontSize: "0.85rem" }}
-                    >
-                      View Profile Resume
-                    </a>
+                <div className="modal-info-grid">
+                  <div className="info-chip">
+                    <span className="info-chip-label"><FaUserCircle style={{ display: "inline", marginRight: 3 }} />Full Name</span>
+                    <span className="info-chip-value">{selectedApp.name}</span>
+                  </div>
+                  <div className="info-chip">
+                    <span className="info-chip-label"><FaEnvelope style={{ display: "inline", marginRight: 3 }} />Email Address</span>
+                    <span className="info-chip-value" style={{ fontSize: "0.82rem" }}>{selectedApp.email}</span>
+                  </div>
+                  <div className="info-chip">
+                    <span className="info-chip-label"><FaPhone style={{ display: "inline", marginRight: 3 }} />Phone Number</span>
+                    <span className="info-chip-value">{selectedApp.phone}</span>
+                  </div>
+                  <div className="info-chip">
+                    <span className="info-chip-label"><FaMapMarkerAlt style={{ display: "inline", marginRight: 3 }} />Address</span>
+                    <span className="info-chip-value">{selectedApp.address || "—"}</span>
                   </div>
                 </div>
-              )}
+              </div>
 
-              {/* 2. Specific Job Application Resume */}
-              {selectedApp.resume && selectedApp.resume.url && (
-                <div className="detail-item" style={{ marginTop: "1rem" }}>
-                  <div className="detail-label" style={{ color: "#a855f7" }}>📋 Specific Job Application Resume (Submitted for this Job)</div>
-                  <div className="cv-preview-box" style={{ background: "rgba(168, 85, 247, 0.08)", border: "1px solid rgba(168, 85, 247, 0.25)" }}>
-                    <FaDownload style={{ fontSize: "1.8rem", color: "#a855f7" }} />
-                    <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Application Submission Attachment</span>
-                    <a 
-                      href={selectedApp.resume.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      title="Open application submitted resume in new tab"
-                      style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)", color: "#fff", padding: "6px 14px", borderRadius: "6px", textDecoration: "none", fontWeight: 600, fontSize: "0.85rem" }}
-                    >
-                      View Application Resume
-                    </a>
+              {/* System IDs Section */}
+              <div className="modal-section">
+                <div className="modal-section-title">
+                  <FaIdBadge /> System Identifiers
+                </div>
+                <div className="modal-info-grid">
+                  <div className="info-chip">
+                    <span className="info-chip-label">Applicant Account ID</span>
+                    <span className="info-chip-value mono">{selectedApp.applicantID?.user || "—"}</span>
                   </div>
+                  <div className="info-chip">
+                    <span className="info-chip-label">Employer Account ID</span>
+                    <span className="info-chip-value mono">{selectedApp.employerID?.user || "—"}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cover Letter Section */}
+              <div className="modal-section">
+                <div className="modal-section-title">
+                  <FaFileAlt /> Cover Letter & Profile Summary
+                </div>
+                <div className="detail-text-block">
+                  {selectedApp.coverLetter || "No cover letter submitted."}
+                </div>
+              </div>
+
+              {/* Resumes Section */}
+              {(selectedApp.applicantProfileResume?.url || selectedApp.resume?.url) && (
+                <div className="modal-section">
+                  <div className="modal-section-title">
+                    <FaDownload /> Submitted Resumes
+                  </div>
+
+                  {/* Main Profile Resume */}
+                  {selectedApp.applicantProfileResume?.url && (
+                    <div className="cv-card" style={{ marginBottom: "0.75rem", borderColor: "rgba(99,102,241,0.3)", background: "rgba(99,102,241,0.04)" }}>
+                      <div className="cv-card-icon" style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.2), rgba(6,182,212,0.15))" }}>
+                        ⭐
+                      </div>
+                      <div className="cv-card-info">
+                        <div className="cv-card-title">
+                          {selectedApp.applicantProfileResume.name || "Master Profile Resume"}
+                        </div>
+                        <div className="cv-card-subtitle">Candidate Profile Resume · Priority</div>
+                      </div>
+                      <a
+                        href={selectedApp.applicantProfileResume.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="cv-card-btn primary"
+                      >
+                        <FaDownload style={{ fontSize: "0.75rem" }} /> View
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Specific Job Resume */}
+                  {selectedApp.resume?.url && (
+                    <div className="cv-card" style={{ borderColor: "rgba(124,58,237,0.3)", background: "rgba(124,58,237,0.04)" }}>
+                      <div className="cv-card-icon" style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.2), rgba(109,40,217,0.1))" }}>
+                        📋
+                      </div>
+                      <div className="cv-card-info">
+                        <div className="cv-card-title">Application Submission Attachment</div>
+                        <div className="cv-card-subtitle">Specific Job Application Resume</div>
+                      </div>
+                      <a
+                        href={selectedApp.resume.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="cv-card-btn purple"
+                      >
+                        <FaDownload style={{ fontSize: "0.75rem" }} /> View
+                      </a>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
+            {/* Footer */}
             <div className="modal-footer">
               <button type="button" onClick={() => setSelectedApp(null)} className="btn-cancel">
-                Close View
+                Close
               </button>
             </div>
           </div>

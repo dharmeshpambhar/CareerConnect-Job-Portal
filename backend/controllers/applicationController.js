@@ -328,7 +328,8 @@ export const employerGetAllApplications = catchAsyncErrors(async (req, res, next
   const { _id } = req.user;
   const rawApplications = await Application.find({ "employerID.user": _id })
     .populate("jobId", "title category country city")
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .lean();
 
   const applicantIds = rawApplications.map((a) => a.applicantID?.user).filter(Boolean);
   const jobseekers = await Jobseeker.find({ _id: { $in: applicantIds } })
@@ -399,7 +400,8 @@ export const jobseekerGetAllApplications = catchAsyncErrors(async (req, res, nex
   const { _id } = req.user;
   const rawApplications = await Application.find({ "applicantID.user": _id })
     .populate("jobId", "title category country city")
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .lean();
 
   const employerIds = rawApplications.map((a) => a.employerID?.user).filter(Boolean);
   const employers = await Employer.find({ _id: { $in: employerIds } })

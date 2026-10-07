@@ -4,12 +4,12 @@ import toast from "react-hot-toast";
 import { Context } from "../../main";
 import { FaBookmark, FaRegBookmark } from "react-icons/fa";
 import { FiArrowLeft, FiChevronDown, FiChevronUp, FiExternalLink, FiHelpCircle, FiFileText, FiBriefcase, FiUser } from "react-icons/fi";
-import { fetchJobById, toggleWishlist, fetchWishlist } from "../../apiService";
+import { fetchJobById, toggleWishlist, fetchWishlist, getCachedJobDirectly } from "../../apiService";
 
 const JobDetails = () => {
   const { id } = useParams();
-  const [job, setJob] = useState({});
-  const [fetchingJob, setFetchingJob] = useState(true);
+  const [job, setJob] = useState(() => getCachedJobDirectly(id) || {});
+  const [fetchingJob, setFetchingJob] = useState(() => !Boolean(getCachedJobDirectly(id)?._id));
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
   const navigateTo = useNavigate();
 
@@ -17,20 +17,21 @@ const JobDetails = () => {
   const [savedJobIds, setSavedJobIds] = useState(new Set());
 
   useEffect(() => {
-    if (isAuthorized) {
-      setFetchingJob(true);
+    if (isAuthorized && id) {
+      const cached = getCachedJobDirectly(id);
+      if (!cached) setFetchingJob(true);
       fetchJobById(id)
         .then(({ job: data, offline }) => {
           if (data) {
             setJob(data);
-          } else if (!offline) {
+          } else if (!offline && !cached) {
             navigateTo("/notfound");
           }
         })
         .finally(() => {
           setFetchingJob(false);
         });
-    } else {
+    } else if (!isAuthorized) {
       setFetchingJob(false);
     }
   }, [isAuthorized, id]);

@@ -18,6 +18,8 @@ import {
 import { FaCamera } from "react-icons/fa";
 import { fetchApplications, uploadProfilePictureApi } from "../../apiService";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api/v1";
+
 const Sidebar = ({ isOpen, onClose }) => {
   const { isAuthorized, setIsAuthorized, user, setUser } = useContext(Context);
   const navigateTo = useNavigate();
@@ -63,7 +65,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
     try {
       const response = await axios.put(
-        "http://localhost:4000/api/v1/user/notifications/settings",
+        `${API_URL}/user/notifications/settings`,
         updatedSettings,
         { withCredentials: true }
       );
@@ -89,7 +91,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   const handleLogout = async () => {
     try {
-      const response = await axios.get("http://localhost:4000/api/v1/user/logout", {
+      const response = await axios.get(`${API_URL}/user/logout`, {
         withCredentials: true,
       });
       toast.success(response.data?.message || "Logged out successfully");
